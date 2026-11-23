@@ -128,6 +128,22 @@ export type TitledContent = {
   note?: string
 }
 
+export type IntakeSubmittedFile = {
+  field: string
+  filename: string
+  mimeType: string
+  sizeBytes: number
+}
+
+export type IntakeSubmittedContent = {
+  version: 1
+  title: string
+  values?: Record<string, ActivityValue>
+  note?: string
+  submissionId?: string
+  files?: IntakeSubmittedFile[]
+}
+
 export type SignatureContent = {
   version: 1
   document: {
@@ -162,6 +178,7 @@ export type ActivityContent =
   | CommunicationStatusContent
   | ActivityMetaContent
   | TitledContent
+  | IntakeSubmittedContent
   | SignatureContent
   | RepaymentCaseFile
 
@@ -427,9 +444,7 @@ export const parseActivityMetaContent = (raw: string): ActivityMetaContent | nul
   }
 }
 
-export const parseTitledContent = (raw: string): TitledContent | null => {
-  const value = parseContentJson(raw)
-  if (!hasOnlyKeys(value, ['version', 'title', 'values', 'note'])) return null
+const parseTitledFields = (value: Record<string, unknown>): TitledContent | null => {
   if (value['version'] !== 1 || !nonEmptyString(value['title'])) return null
   const values = value['values']
   if (values !== undefined) {
@@ -438,11 +453,59 @@ export const parseTitledContent = (raw: string): TitledContent | null => {
       if (parseActivityValue(entry) === undefined) return null
     }
   }
+  const note = asString(value['note'])
   return {
     version: 1,
     title: value['title'].trim(),
     ...(values ? { values: values as Record<string, ActivityValue> } : {}),
-    ...(asString(value['note']) ? { note: asString(value['note']) } : {})
+    ...(note ? { note } : {})
+  }
+}
+
+export const parseTitledContent = (raw: string): TitledContent | null => {
+  const value = parseContentJson(raw)
+  if (!hasOnlyKeys(value, ['version', 'title', 'values', 'note'])) return null
+  return parseTitledFields(value)
+}
+
+export const parseIntakeSubmittedContent = (raw: string): IntakeSubmittedContent | null => {
+  const value = parseContentJson(raw)
+  if (!hasOnlyKeys(value, ['version', 'title', 'values', 'note', 'submissionId', 'files'])) {
+    return null
+  }
+  const base = parseTitledFields(value)
+  if (!base) return null
+  const submissionId = asString(value['submissionId'])
+  if (value['submissionId'] !== undefined && !submissionId) return null
+  let files: IntakeSubmittedFile[] | undefined
+  if (value['files'] !== undefined) {
+    if (!Array.isArray(value['files'])) return null
+    files = []
+    for (const entry of value['files']) {
+      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return null
+      const record = entry as Record<string, unknown>
+      if (!hasOnlyKeys(record, ['field', 'filename', 'mimeType', 'sizeBytes'])) return null
+      const field = asString(record['field'])
+      const filename = asString(record['filename'])
+      const mimeType = asString(record['mimeType'])
+      const sizeBytes = record['sizeBytes']
+      if (
+        !field ||
+        !filename ||
+        !mimeType ||
+        typeof sizeBytes !== 'number' ||
+        !Number.isInteger(sizeBytes) ||
+        sizeBytes < 0
+      ) {
+        return null
+      }
+      files.push({ field, filename, mimeType, sizeBytes })
+    }
+  }
+  return {
+    ...base,
+    ...(submissionId ? { submissionId } : {}),
+    ...(files?.length ? { files } : {})
   }
 }
 
@@ -536,6 +599,7 @@ export const parseActivityContent = (type: string, raw: string): ActivityContent
     if (isCommunicationStatusType(type)) return parseCommunicationStatusContent(raw)
     if (isActivityMetaType(type)) return parseActivityMetaContent(raw)
     if (isRepaymentPlanEventType(type)) return parseRepaymentCaseFileContent(type, raw)
+    if (type === 'intake.submitted') return parseIntakeSubmittedContent(raw)
     if (isTitledType(type)) return parseTitledContent(raw)
     if (isSignatureType(type)) return parseSignatureContent(raw)
     return null

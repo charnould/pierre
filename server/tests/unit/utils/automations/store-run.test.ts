@@ -29,13 +29,18 @@ import { createTestUser } from '../../../test-user'
 
 const paths = testDatastorePaths('automations')
 
-const seed_user = (email: string): Promise<void> =>
+const seed_user = (email: string, isAdministrator = false): Promise<void> =>
   createTestUser({
     email,
-    isAdministrator: false,
+    isAdministrator,
     moduleIds: [],
     chatbotIds: ['default']
   })
+
+const alice = { email: 'alice@example.com', isAdministrator: false }
+const bob = { email: 'bob@example.com', isAdministrator: false }
+const carol = { email: 'carol@example.com', isAdministrator: false }
+const admin = { email: 'admin@example.com', isAdministrator: true }
 
 beforeAll(() => {
   setDatastoreRoot(paths.root)
@@ -50,8 +55,9 @@ beforeEach(async () => {
   await mkdir(paths.root, { recursive: true })
   await setup()
   await seedInstanceSetup()
-  await seed_user('alice@example.com')
-  await seed_user('bob@example.com')
+  await seed_user(alice.email)
+  await seed_user(bob.email)
+  await seed_user(admin.email, true)
   reset_automation_executor()
   set_automation_executor(async () => ({ kind: 'report', contenu: '<p>Rapport de test</p>' }))
 })
@@ -61,8 +67,8 @@ afterEach(async () => {
 })
 
 describe('automations store', () => {
-  it('create assigns owner and next_run_at; owner sees it', async () => {
-    const auto = await create_automation('alice', {
+  it('create assigns owner and next_run_at; owner, mentions and admin see it', async () => {
+    const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Rapport test',
       frequency: 'weekly',
@@ -72,17 +78,18 @@ describe('automations store', () => {
       maxReports: 3,
       mentions: ['bob']
     })
-    expect(auto.owner).toBe('alice')
+    expect(auto.owner).toBe(alice.email)
     expect(auto.status).toBe('scheduled')
     expect(auto.nextRunAt).toBeTruthy()
     expect(auto.cron).toBe('0 8 * * 1')
-    expect(list_automations('alice', 'alice@example.com')).toHaveLength(1)
-    expect(list_automations('bob@example.com', 'bob@example.com')).toHaveLength(1)
-    expect(list_automations('carol', 'carol@example.com')).toHaveLength(0)
+    expect(list_automations(alice)).toHaveLength(1)
+    expect(list_automations(bob)).toHaveLength(1)
+    expect(list_automations(carol)).toHaveLength(0)
+    expect(list_automations(admin)).toHaveLength(1)
   })
 
-  it('non-owner cannot patch or delete', async () => {
-    const auto = await create_automation('alice', {
+  it('non-owner cannot patch or delete; administrator can manage', async () => {
+    const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'X',
       frequency: 'daily',
@@ -90,12 +97,21 @@ describe('automations store', () => {
       prompt: 'p',
       mentions: ['bob']
     })
-    await expect(update_automation(auto.id, 'bob', { name: 'hack' })).rejects.toThrow()
-    expect(() => delete_automation(auto.id, 'bob')).toThrow()
+    await expect(update_automation(auto.id, bob, { name: 'hack' })).rejects.toThrow()
+    expect(() => delete_automation(auto.id, bob)).toThrow()
+
+    const editedByAdmin = await update_automation(auto.id, admin, { name: 'Admin edit' })
+    expect(editedByAdmin.name).toBe('Admin edit')
+    const ranByAdmin = await run_automation_now(auto.id, admin)
+    expect(ranByAdmin.lastRunStatus).toBe('success')
+    set_automation_pin(auto.id, admin, true)
+    expect(get_automation(auto.id, admin)?.pinned).toBe(true)
+    delete_automation(auto.id, admin)
+    expect(get_automation(auto.id, alice)).toBeNull()
   })
 
   it('pin is per-user; delete purges pins', async () => {
-    const auto = await create_automation('alice', {
+    const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Pin me',
       frequency: 'daily',
@@ -103,36 +119,36 @@ describe('automations store', () => {
       prompt: 'p',
       mentions: ['bob']
     })
-    set_automation_pin(auto.id, 'bob@example.com', 'bob@example.com', true)
-    expect(get_automation(auto.id, 'bob@example.com', 'bob@example.com')?.pinned).toBe(true)
-    expect(get_automation(auto.id, 'alice', 'alice@example.com')?.pinned).toBe(false)
-    delete_automation(auto.id, 'alice')
+    set_automation_pin(auto.id, bob, true)
+    expect(get_automation(auto.id, bob)?.pinned).toBe(true)
+    expect(get_automation(auto.id, alice)?.pinned).toBe(false)
+    delete_automation(auto.id, alice)
     const db = new Database(paths.database)
-    const bob = db
+    const bobRow = db
       .query<{ preferences: string }, [string]>('SELECT preferences FROM users WHERE email = ?')
       .get('bob@example.com')
     db.close()
-    expect(JSON.parse(bob!.preferences).pinned_automation_ids).toEqual([])
+    expect(JSON.parse(bobRow!.preferences).pinned_automation_ids).toEqual([])
   })
 
   it('pause clears next_run_at; unpause recomputes', async () => {
-    const auto = await create_automation('alice', {
+    const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Pause',
       frequency: 'daily',
       frequencyTime: '08:00',
       prompt: 'p'
     })
-    const paused = await update_automation(auto.id, 'alice', { status: 'paused' })
+    const paused = await update_automation(auto.id, alice, { status: 'paused' })
     expect(paused.status).toBe('paused')
     expect(paused.nextRunAt).toBeNull()
-    const resumed = await update_automation(auto.id, 'alice', { status: 'scheduled' })
+    const resumed = await update_automation(auto.id, alice, { status: 'scheduled' })
     expect(resumed.status).toBe('scheduled')
     expect(resumed.nextRunAt).toBeTruthy()
   })
 
   it('persists a formatted report prompt', async () => {
-    const auto = await create_automation('alice', {
+    const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Fmt',
       frequency: 'daily',
@@ -141,7 +157,7 @@ describe('automations store', () => {
     })
     expect(auto.config).toMatchObject({ prompt: '- item1\n- item2\n' })
 
-    const patched = await update_automation(auto.id, 'alice', {
+    const patched = await update_automation(auto.id, alice, {
       prompt: '#   Titre\n\n**gras**'
     })
     expect(patched.config).toMatchObject({
@@ -152,7 +168,7 @@ describe('automations store', () => {
 
 describe('automations worker', () => {
   it('run creates activity with owner+mentions and sets last_run_status', async () => {
-    const auto = await create_automation('alice', {
+    const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Run me',
       frequency: 'daily',
@@ -161,7 +177,7 @@ describe('automations worker', () => {
       maxReports: 6,
       mentions: ['bob']
     })
-    const after = await run_automation_now(auto.id, 'alice')
+    const after = await run_automation_now(auto.id, alice)
     expect(after.lastRunStatus).toBe('success')
     expect(after.status).toBe('scheduled')
     expect(after.nextRunAt).toBeTruthy()
@@ -181,7 +197,7 @@ describe('automations worker', () => {
   })
 
   it('claim is exclusive', async () => {
-    const auto = await create_automation('alice', {
+    const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Claim',
       frequency: 'daily',
@@ -199,7 +215,7 @@ describe('automations worker', () => {
   })
 
   it('does not reclaim a lease renewed after the stale scan', async () => {
-    const auto = await create_automation('alice', {
+    const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Lease',
       frequency: 'daily',
@@ -220,7 +236,7 @@ describe('automations worker', () => {
         leaseExpiredBefore: staleScanAt
       })
     ).toBe(false)
-    expect(get_automation(auto.id, 'alice')?.status).toBe('running')
+    expect(get_automation(auto.id, alice)?.status).toBe('running')
   })
 
   it('executor error still replanifies', async () => {
@@ -228,7 +244,7 @@ describe('automations worker', () => {
     set_automation_executor(async () => {
       throw new Error('boom')
     })
-    const auto = await create_automation('alice', {
+    const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Fail',
       frequency: 'daily',
@@ -236,7 +252,7 @@ describe('automations worker', () => {
       prompt: 'p'
     })
     try {
-      const after = await run_automation_now(auto.id, 'alice')
+      const after = await run_automation_now(auto.id, alice)
       expect(after.lastRunStatus).toBe('error')
       expect(after.status).toBe('scheduled')
       expect(after.nextRunAt).toBeTruthy()
@@ -247,7 +263,7 @@ describe('automations worker', () => {
   })
 
   it('trim preserves append-only report activities', async () => {
-    const auto = await create_automation('alice', {
+    const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Trim',
       frequency: 'daily',
@@ -256,11 +272,11 @@ describe('automations worker', () => {
       maxReports: 2
     })
     for (let i = 0; i < 4; i++) {
-      create_trusted_activity('alice', {
+      create_trusted_activity(alice.email, {
         contexte: 'automations',
         ref: auto.id,
         type: 'automation.reported',
-        recipients: ['alice'],
+        recipients: [alice.email],
         contenu: JSON.stringify({ version: 1, title: `Rapport ${i}` }),
         auteur: `automation:${auto.id}`
       })
@@ -277,22 +293,22 @@ describe('automations worker', () => {
   })
 
   it('manual run while paused restores paused without next_run_at', async () => {
-    const auto = await create_automation('alice', {
+    const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Paused run',
       frequency: 'daily',
       frequencyTime: '08:00',
       prompt: 'p'
     })
-    await update_automation(auto.id, 'alice', { status: 'paused' })
-    const after = await run_automation_now(auto.id, 'alice')
+    await update_automation(auto.id, alice, { status: 'paused' })
+    const after = await run_automation_now(auto.id, alice)
     expect(after.status).toBe('paused')
     expect(after.nextRunAt).toBeNull()
     expect(after.lastRunStatus).toBe('success')
   })
 
   it('due poll reclaim stuck running then runs due', async () => {
-    const auto = await create_automation('alice', {
+    const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Due',
       frequency: 'daily',
@@ -314,7 +330,7 @@ describe('automations worker', () => {
     // After reclaim, status becomes scheduled with next_run_at in the future — force due:
     db.close()
     await run_due_automations()
-    const afterReclaim = get_automation(auto.id, 'alice')!
+    const afterReclaim = get_automation(auto.id, alice)!
     // stuck was reclaimed to error + scheduled with future next — make it due and poll again
     expect(afterReclaim.lastRunStatus).toBe('error')
     expect(afterReclaim.status).toBe('scheduled')
@@ -326,7 +342,7 @@ describe('automations worker', () => {
     ])
     db2.close()
     await run_due_automations()
-    const afterRun = get_automation(auto.id, 'alice')!
+    const afterRun = get_automation(auto.id, alice)!
     expect(afterRun.lastRunStatus).toBe('success')
   })
 })

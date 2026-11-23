@@ -194,7 +194,7 @@ const summary = (row: SummaryRow): LlmRunSummary => ({
 })
 
 const bounds = (period: UsagePeriod, now: Date) => {
-  const range = periodRange(now, period, timezone() ?? 'UTC')
+  const range = periodRange(now, period, timezone())
   return { start: range.start.toISOString(), end: range.end.toISOString() }
 }
 
@@ -242,7 +242,7 @@ export const getLlmRun = (id: string): LlmRun | null => {
 }
 
 export const llmUsage = (period: UsagePeriod, now = new Date()) => {
-  const zone = timezone() ?? 'UTC'
+  const zone = timezone()
   const start = periodRange(now, 'year', zone).start.toISOString()
   using db = openDatastore()
   const rows = db

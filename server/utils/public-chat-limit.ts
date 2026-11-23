@@ -11,16 +11,6 @@ const positiveInteger = (name: string, fallback: number): number => {
   return Number.isSafeInteger(value) && value > 0 ? value : fallback
 }
 
-export function publicChatAddress(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-for')
-  const address = forwarded
-    ?.split(',')
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .at(-1)
-  return address || 'local'
-}
-
 export function beginPublicChat(
   address: string,
   now = Date.now()

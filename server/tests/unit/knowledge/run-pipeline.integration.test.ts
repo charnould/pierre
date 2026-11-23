@@ -8,6 +8,7 @@ import type { BusinessModuleId } from '../../../../shared/modules'
 import { FIELDS } from '../../../utils/carl'
 import { migrate_datastore } from '../../../utils/datastore-migrations'
 import { CORE_DATA_CONTRACT } from '../../../utils/datastore-tables'
+import { create_intake, publish_intake } from '../../../utils/intakes/store'
 import { updateKnowledgeSourceMetadata } from '../../../utils/knowledge/catalog'
 import { importKnowledgeFiles } from '../../../utils/knowledge/import-files'
 import { runKnowledgePipeline } from '../../../utils/knowledge/run-pipeline'
@@ -410,5 +411,33 @@ describe('knowledge pipeline', () => {
     await runKnowledgePipeline(Bun.randomUUIDv7())
     const second = await Bun.file(knowledgeDatabase()).arrayBuffer()
     expect(new Uint8Array(second)).toEqual(new Uint8Array(first))
+  }, 20_000)
+
+  it('only attaches intake descriptions to profiles where that intake is assigned', async () => {
+    await upload('interventions.csv', 'code;libelle\nA1;Ascenseur\n', {
+      profileIds: [TEST_PROFILE],
+      title: 'interventions'
+    })
+    const draft = create_intake('alice@example.org', {
+      name: 'Collecte interventions',
+      description: 'Description privée de la collecte',
+      tableName: 'interventions',
+      publishToKnowledge: true,
+      config: {
+        form: {
+          title: 'Collecte interventions',
+          fields: [{ type: 'short_text', label: 'Objet', required: true }]
+        },
+        access: { passwords: [] },
+        notifications: { mode: 'none' }
+      }
+    })
+    publish_intake(draft.id, { email: 'alice@example.org', isAdministrator: true })
+
+    await runKnowledgePipeline(Bun.randomUUIDv7())
+
+    using db = new Database(knowledgeDatabase(), { readonly: true })
+    const readme = db.query<{ content: string }, []>('SELECT content FROM _readme').get()
+    expect(readme?.content).not.toContain('Description privée de la collecte')
   }, 20_000)
 })

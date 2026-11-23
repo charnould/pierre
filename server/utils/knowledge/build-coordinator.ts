@@ -27,7 +27,11 @@ let currentBuild: KnowledgeBuild | null = null
 let pending: { trigger: KnowledgeBuildTrigger; requestedBy: string | null } | null = null
 
 const changesCatalog = (trigger: KnowledgeBuildTrigger): boolean =>
-  trigger === 'upload' || trigger === 'patch' || trigger === 'delete' || trigger === 'chatbot'
+  trigger === 'upload' ||
+  trigger === 'patch' ||
+  trigger === 'delete' ||
+  trigger === 'chatbot' ||
+  trigger === 'intake'
 
 const executeBuild = async (build: KnowledgeBuild): Promise<void> => {
   const heartbeat = setInterval(() => {

@@ -93,7 +93,7 @@ export async function buildConversationAgentsFile(
   const dbPath = join(knowledgePath, 'db.sqlite')
 
   const parts: string[] = [
-    `<session>Current date and time (${timezone() ?? 'UTC'}): ${today_is()}</session>.`
+    `<session>Current date and time (${timezone()}): ${today_is()}</session>.`
   ]
 
   let raw = (

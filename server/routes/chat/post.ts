@@ -11,7 +11,8 @@ import {
 import type { AppContext } from '../../utils/authenticate-user'
 import { ChatConfigAccessError, resolveAuthorizedChatConfig } from '../../utils/chat-config-access'
 import { loadChatbotConfig } from '../../utils/chatbot-config'
-import { beginPublicChat, publicChatAddress } from '../../utils/public-chat-limit'
+import { clientAddress } from '../../utils/client-address'
+import { beginPublicChat } from '../../utils/public-chat-limit'
 import { getWorkspacesPath } from '../../utils/smolvm'
 import { streamChatRequest, streamChatRequestError } from '../../utils/stream-chat-request'
 import { tryReserveConversation } from '../../utils/vm-registry'
@@ -48,7 +49,7 @@ export const createPostAiController =
       assertMultipartRequestSize(c.req.header('content-length'))
       const user = c.get('user')
       if (!user) {
-        const gate = beginPublicChat(publicChatAddress(c.req.raw))
+        const gate = beginPublicChat(clientAddress(c.req.raw))
         if (!gate.ok) {
           return c.json({ error: { code: 'rate_limited', message: 'Trop de demandes.' } }, 429, {
             'retry-after': String(gate.retryAfter)

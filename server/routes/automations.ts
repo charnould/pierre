@@ -14,9 +14,8 @@ import {
 } from '../utils/automations/store'
 
 export const listAutomations = async (c: AuthContext) => {
-  const user = c.get('user')
   try {
-    return c.json({ data: list_automations(user.email, user.email) })
+    return c.json({ data: list_automations(c.get('user')) })
   } catch (error) {
     if (error instanceof AutomationsError) {
       return c.json({ error: { code: error.code, message: error.message } }, 400)
@@ -62,7 +61,6 @@ export const createAutomation = async (c: AuthContext) => {
 }
 
 export const patchAutomation = async (c: AuthContext) => {
-  const user = c.get('user')
   const id = c.req.param('id')
   if (!id) {
     return c.json({ error: { code: 'invalid_body', message: 'Missing id' } }, 400)
@@ -86,7 +84,9 @@ export const patchAutomation = async (c: AuthContext) => {
     )
   }
   try {
-    return c.json({ data: await update_automation(id, user.email, parsed.data) })
+    return c.json({
+      data: await update_automation(id, c.get('user'), parsed.data)
+    })
   } catch (error) {
     if (error instanceof AutomationsError) {
       const status = error.code === 'not_found' ? 404 : error.code === 'forbidden' ? 403 : 400
@@ -101,13 +101,12 @@ export const patchAutomation = async (c: AuthContext) => {
 }
 
 export const deleteAutomation = async (c: AuthContext) => {
-  const user = c.get('user')
   const id = c.req.param('id')
   if (!id) {
     return c.json({ error: { code: 'invalid_body', message: 'Missing id' } }, 400)
   }
   try {
-    delete_automation(id, user.email)
+    delete_automation(id, c.get('user'))
     return c.json({ data: { deleted: true } })
   } catch (error) {
     if (error instanceof AutomationsError) {
@@ -123,13 +122,12 @@ export const deleteAutomation = async (c: AuthContext) => {
 }
 
 export const runAutomation = async (c: AuthContext) => {
-  const user = c.get('user')
   const id = c.req.param('id')
   if (!id) {
     return c.json({ error: { code: 'invalid_body', message: 'Missing id' } }, 400)
   }
   try {
-    const data = await run_automation_now(id, user.email)
+    const data = await run_automation_now(id, c.get('user'))
     return c.json({ data })
   } catch (error) {
     if (error instanceof AutomationsError) {
@@ -151,13 +149,14 @@ export const runAutomation = async (c: AuthContext) => {
 }
 
 export const pinAutomation = async (c: AuthContext) => {
-  const user = c.get('user')
   const id = c.req.param('id')
   if (!id) {
     return c.json({ error: { code: 'invalid_body', message: 'Missing id' } }, 400)
   }
   try {
-    return c.json({ data: set_automation_pin(id, user.email, user.email, true) })
+    return c.json({
+      data: set_automation_pin(id, c.get('user'), true)
+    })
   } catch (error) {
     if (error instanceof AutomationsError) {
       const status = error.code === 'not_found' ? 404 : error.code === 'forbidden' ? 403 : 400
@@ -169,13 +168,14 @@ export const pinAutomation = async (c: AuthContext) => {
 }
 
 export const unpinAutomation = async (c: AuthContext) => {
-  const user = c.get('user')
   const id = c.req.param('id')
   if (!id) {
     return c.json({ error: { code: 'invalid_body', message: 'Missing id' } }, 400)
   }
   try {
-    return c.json({ data: set_automation_pin(id, user.email, user.email, false) })
+    return c.json({
+      data: set_automation_pin(id, c.get('user'), false)
+    })
   } catch (error) {
     if (error instanceof AutomationsError) {
       const status = error.code === 'not_found' ? 404 : error.code === 'forbidden' ? 403 : 400

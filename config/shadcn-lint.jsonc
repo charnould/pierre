@@ -297,6 +297,24 @@
       }
     },
     {
+      "files": ["**/src/shared/components/IntakeFormFields.tsx"],
+      "rules": {
+        "shadcn/no-arbitrary-values": ["error", { "allow": ["[font-size:12px]"] }],
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              {
+                "pattern": "^FieldDescription$",
+                "allow": ["layout", "[font-size:12px]", "leading-4"]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "files": ["**/src/features/bulk/components/BulkEditor.tsx"],
       "rules": {
         "shadcn/no-restyle": [
@@ -581,7 +599,10 @@
       }
     },
     {
-      "files": ["**/src/features/automations/components/AutomationsList.tsx"],
+      "files": [
+        "**/src/features/automations/components/AutomationsList.tsx",
+        "**/src/features/intakes/components/IntakesList.tsx"
+      ],
       "rules": {
         "shadcn/no-arbitrary-values": ["error", { "allow": ["max-h-[2lh]"] }]
       }

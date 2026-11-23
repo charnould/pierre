@@ -15,6 +15,7 @@ import {
   repaymentReady,
   SetupError,
   ticketsReady,
+  timezone,
   writeSetup
 } from '../../../utils/setup-store'
 import { repaymentSchedule } from '../../seed-setup'
@@ -76,6 +77,15 @@ describe('setup store', () => {
     await expect(writeSetup('repayment/messages', new TextEncoder().encode('{'))).rejects.toThrow(
       'JSON invalide.'
     )
+  })
+
+  it('defaults timezone to Europe/Paris until global is stored', async () => {
+    expect(timezone()).toBe('Europe/Paris')
+    await writeSetup(
+      'global',
+      new TextEncoder().encode('{"name":"PIERRE","timezone":"Indian/Reunion"}')
+    )
+    expect(timezone()).toBe('Indian/Reunion')
   })
 
   it('pretty-prints stored JSON with JSON.stringify', async () => {

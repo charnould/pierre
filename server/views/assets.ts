@@ -19,7 +19,7 @@ type ManifestChunk = {
   css?: string[]
 }
 
-export type ChatWebEntry = {
+export type WebEntry = {
   jsHref: string
   cssHref: string
   jsPath: string
@@ -36,27 +36,29 @@ function publicHref(file: string): string {
   return `${PUBLIC_BASE}/${file}`
 }
 
-export function readChatWebEntry(): ChatWebEntry {
+function readManifest(): Record<string, unknown> {
   if (!existsSync(MANIFEST_PATH)) {
-    throw new Error(`Chat manifest missing at ${MANIFEST_PATH}. Run: bun server:build`)
+    throw new Error(`Web manifest missing at ${MANIFEST_PATH}. Run: bun server:build`)
   }
-
   const manifest: unknown = JSON.parse(readFileSync(MANIFEST_PATH, 'utf8'))
   if (typeof manifest !== 'object' || manifest === null) {
-    throw new Error('Chat manifest is not an object')
+    throw new Error('Web manifest is not an object')
   }
+  return manifest as Record<string, unknown>
+}
 
-  const chunks = Object.values(manifest).filter(isManifestChunk)
-  const entry = chunks.find((chunk) => chunk.isEntry === true)
-  const cssFile = entry?.css?.[0] ?? chunks.find((chunk) => chunk.file.endsWith('.css'))?.file
+function readWebEntry(entryKey: string, manifest = readManifest()): WebEntry {
+  const raw = manifest[entryKey]
+  const entry = isManifestChunk(raw) && raw.isEntry === true ? raw : undefined
+  const cssFile = entry?.css?.[0]
   if (!entry || !cssFile) {
-    throw new Error('Chat manifest has no JS/CSS entry. Run: bun server:build')
+    throw new Error(`Web manifest missing entry ${entryKey}. Run: bun server:build`)
   }
 
   const jsPath = join(DIST_DIR, entry.file)
   const cssPath = join(DIST_DIR, cssFile)
   if (!existsSync(jsPath) || !existsSync(cssPath)) {
-    throw new Error('Chat assets are missing on disk. Run: bun server:build')
+    throw new Error(`Web assets for ${entryKey} are missing on disk. Run: bun server:build`)
   }
 
   return {
@@ -67,7 +69,19 @@ export function readChatWebEntry(): ChatWebEntry {
   }
 }
 
-const chatWeb = readChatWebEntry()
+export function readChatWebEntry(): WebEntry {
+  return readWebEntry('src/chat-web/main.tsx')
+}
+
+export function readIntakeWebEntry(): WebEntry {
+  return readWebEntry('src/intake-web/main.tsx')
+}
+
+const manifest = readManifest()
+const chatWeb = readWebEntry('src/chat-web/main.tsx', manifest)
+const intakeWeb = readWebEntry('src/intake-web/main.tsx', manifest)
 
 export const chatJs = chatWeb.jsHref
 export const chatCss = chatWeb.cssHref
+export const intakeJs = intakeWeb.jsHref
+export const intakeCss = intakeWeb.cssHref

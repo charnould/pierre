@@ -10,7 +10,14 @@ import {
   type PatchAutomationBody
 } from '../../../shared/automations'
 import type { UserPreferences } from '../../../shared/user-preferences'
-import { login_from_email } from '../activities/rows'
+import {
+  canManageCollaboratorResource,
+  canonicalMentions,
+  canSeeCollaboratorResource,
+  type CollaboratorActor,
+  normalizeCollaboratorPrincipal,
+  parseMentionsJson
+} from '../collaborator-access'
 import { openDatastore } from '../datastore-db'
 import { formatMarkdown } from '../format-markdown'
 import { timezone } from '../setup-store'
@@ -46,38 +53,8 @@ type AutomationDbRow = {
   config: string
 }
 
-function parse_mentions_json(raw: string): string[] {
-  const parsed: unknown = JSON.parse(raw)
-  if (!Array.isArray(parsed) || !parsed.every((value) => typeof value === 'string')) {
-    throw new Error('Stored automation mentions must be an array of strings')
-  }
-  return parsed
-}
-
-const canonical_mentions = (db: Database, values: readonly string[]): string[] => {
-  const emails = db
-    .query<{ email: string }, []>('SELECT lower(email) AS email FROM users')
-    .all()
-    .map((row) => row.email)
-  const byLogin = new Map<string, string[]>()
-  for (const email of emails) {
-    const login = login_from_email(email)
-    byLogin.set(login, [...(byLogin.get(login) ?? []), email])
-  }
-  return [
-    ...new Set(
-      values.map((value) => {
-        const normalized = value.trim().toLowerCase()
-        if (emails.includes(normalized)) return normalized
-        const matches = byLogin.get(normalized) ?? []
-        if (matches.length !== 1) {
-          throw new AutomationsError(`Unknown or ambiguous mention: ${value}`)
-        }
-        return matches[0]!
-      })
-    )
-  ]
-}
+const canonical_mentions = (db: Database, values: readonly string[]): string[] =>
+  canonicalMentions(db, values, (message) => new AutomationsError(message))
 
 function row_to_record(row: AutomationDbRow, pinned = false): AutomationRecord {
   const state = parseStoredAutomationState({
@@ -92,7 +69,7 @@ function row_to_record(row: AutomationDbRow, pinned = false): AutomationRecord {
     description: row.description,
     status: state.status,
     owner: row.owner,
-    mentions: parse_mentions_json(row.mentions),
+    mentions: parseMentionsJson(row.mentions),
     cron: row.cron,
     nextRunAt: row.next_run_at,
     lastRunAt: row.last_run_at,
@@ -179,38 +156,28 @@ function purge_pin_from_all_users(db: Database, automation_id: string): void {
   }
 }
 
-function can_see(row: AutomationDbRow, principal: string): boolean {
-  const normalized = principal.trim().toLowerCase()
-  if (row.owner.toLowerCase() === normalized) return true
-  return parse_mentions_json(row.mentions).includes(normalized)
+function can_see(row: AutomationDbRow, actor: CollaboratorActor): boolean {
+  return canSeeCollaboratorResource(row.owner, parseMentionsJson(row.mentions), actor)
 }
 
-export function list_automations(login: string, email: string): AutomationRecord[] {
-  const prefs = get_user_preferences(email)
-  const pinned = new Set(prefs.pinnedAutomationIds)
-  const db = openDatastore()
-  try {
-    const rows = db.query<AutomationDbRow, []>('SELECT * FROM automations').all()
-    return rows
-      .filter((row) => can_see(row, login))
-      .map((row) => row_to_record(row, pinned.has(row.id)))
-  } finally {
-    db.close()
-  }
+export function list_automations(actor: CollaboratorActor): AutomationRecord[] {
+  using db = openDatastore({ readonly: true })
+  const pinned = new Set(get_user_preferences_with_db(db, actor.email).pinnedAutomationIds)
+  return db
+    .query<AutomationDbRow, []>('SELECT * FROM automations')
+    .all()
+    .filter((row) => can_see(row, actor))
+    .map((row) => row_to_record(row, pinned.has(row.id)))
 }
 
-export function get_automation(id: string, login: string, email?: string): AutomationRecord | null {
-  const db = openDatastore()
-  try {
-    const row = db
-      .query<AutomationDbRow, [string]>('SELECT * FROM automations WHERE id = ? LIMIT 1')
-      .get(id)
-    if (!row || !can_see(row, login)) return null
-    const pinned = email ? get_user_preferences(email).pinnedAutomationIds.includes(id) : false
-    return row_to_record(row, pinned)
-  } finally {
-    db.close()
-  }
+export function get_automation(id: string, actor: CollaboratorActor): AutomationRecord | null {
+  using db = openDatastore({ readonly: true })
+  const row = db
+    .query<AutomationDbRow, [string]>('SELECT * FROM automations WHERE id = ? LIMIT 1')
+    .get(id)
+  if (!row || !can_see(row, actor)) return null
+  const pinned = get_user_preferences_with_db(db, actor.email).pinnedAutomationIds.includes(id)
+  return row_to_record(row, pinned)
 }
 
 export async function create_automation(
@@ -223,13 +190,11 @@ export async function create_automation(
     frequencyTime: body.frequencyTime
   })
   const config = { prompt: await formatMarkdown(body.prompt), maxReports: body.maxReports ?? 6 }
-  const canonicalOwner = owner.includes('@') ? owner.trim().toLowerCase() : owner
+  const canonicalOwner = normalizeCollaboratorPrincipal(owner)
   const id = Bun.randomUUIDv7()
-  const zone = timezone()
-  if (!zone) throw new AutomationsError('Automatisations non paramétrées.')
-  const next_run_at = compute_next_run_at(cron, zone)
-  const db = openDatastore()
-  try {
+  const next_run_at = compute_next_run_at(cron, timezone())
+  {
+    using db = openDatastore()
     const mentions = canonical_mentions(db, body.mentions ?? [])
     db.run(
       `INSERT INTO automations (
@@ -248,20 +213,18 @@ export async function create_automation(
         JSON.stringify(storedAutomationConfig(config))
       ]
     )
-  } finally {
-    db.close()
   }
-  return get_automation(id, canonicalOwner)!
+  return get_automation(id, { email: canonicalOwner })!
 }
 
 export async function update_automation(
   id: string,
-  owner: string,
+  actor: CollaboratorActor,
   patch: PatchAutomationBody
 ): Promise<AutomationRecord> {
-  const existing = get_automation(id, owner)
+  const existing = get_automation(id, actor)
   if (!existing) throw new AutomationsError('Automation not found', 'not_found')
-  if (existing.owner.toLowerCase() !== owner.trim().toLowerCase()) {
+  if (!canManageCollaboratorResource(existing.owner, actor)) {
     throw new AutomationsError('Forbidden', 'forbidden')
   }
   if (existing.status === 'running') {
@@ -293,9 +256,7 @@ export async function update_automation(
   if (status === 'paused') {
     next_run_at = null
   } else if (status === 'scheduled' && (scheduleChanged || patch.status === 'scheduled')) {
-    const zone = timezone()
-    if (!zone) throw new AutomationsError('Automatisations non paramétrées.')
-    next_run_at = compute_next_run_at(cron, zone)
+    next_run_at = compute_next_run_at(cron, timezone())
   }
 
   const report = existing.config
@@ -307,15 +268,15 @@ export async function update_automation(
   const trimReportsTo =
     patch.maxReports !== undefined && patch.maxReports < report.maxReports ? patch.maxReports : null
 
-  const db = openDatastore()
-  try {
+  {
+    using db = openDatastore()
     db.transaction(() => {
       const mentions = patch.mentions ? canonical_mentions(db, patch.mentions) : existing.mentions
       const updated = db.run(
         `UPDATE automations SET
            name = ?, description = ?, status = ?, mentions = ?, cron = ?,
            next_run_at = ?, config = ?
-         WHERE id = ? AND owner = ? AND status <> 'running'`,
+         WHERE id = ? AND status <> 'running'`,
         [
           patch.name ?? existing.name,
           patch.description ?? existing.description,
@@ -324,71 +285,62 @@ export async function update_automation(
           cron,
           next_run_at,
           JSON.stringify(storedAutomationConfig(config)),
-          id,
-          owner.trim().toLowerCase()
+          id
         ]
       )
       if (updated.changes === 0) throw new AutomationsError('Automation changed', 'conflict')
     }).immediate()
-  } finally {
-    db.close()
   }
   if (trimReportsTo !== null) trim_report_activities(id, trimReportsTo)
-  return get_automation(id, owner)!
+  return get_automation(id, actor)!
 }
 
-export function delete_automation(id: string, owner: string): void {
-  const existing = get_automation(id, owner)
-  if (!existing) throw new AutomationsError('Automation not found', 'not_found')
-  if (existing.owner.toLowerCase() !== owner.trim().toLowerCase()) {
-    throw new AutomationsError('Forbidden', 'forbidden')
-  }
-  if (existing.status === 'running') {
-    throw new AutomationsError('Automation already running', 'conflict')
-  }
-  const db = openDatastore()
-  try {
-    db.transaction(() => {
-      const deleted = db.run(
-        `DELETE FROM automations
-         WHERE id = ? AND owner = ? AND status <> 'running'`,
-        [id, owner.trim().toLowerCase()]
-      )
-      if (deleted.changes === 0) throw new AutomationsError('Automation changed', 'conflict')
-      purge_pin_from_all_users(db, id)
-    }).immediate()
-  } finally {
-    db.close()
-  }
+export function delete_automation(id: string, actor: CollaboratorActor): void {
+  using db = openDatastore()
+  db.transaction(() => {
+    const row = db
+      .query<AutomationDbRow, [string]>('SELECT * FROM automations WHERE id = ? LIMIT 1')
+      .get(id)
+    if (!row || !can_see(row, actor)) {
+      throw new AutomationsError('Automation not found', 'not_found')
+    }
+    if (!canManageCollaboratorResource(row.owner, actor)) {
+      throw new AutomationsError('Forbidden', 'forbidden')
+    }
+    const deleted = db.run(
+      `DELETE FROM automations
+       WHERE id = ? AND status <> 'running'`,
+      [id]
+    )
+    if (deleted.changes === 0) {
+      throw new AutomationsError('Automation already running', 'conflict')
+    }
+    purge_pin_from_all_users(db, id)
+  }).immediate()
 }
 
 export function set_automation_pin(
   id: string,
-  login: string,
-  email: string,
+  actor: CollaboratorActor,
   pinned: boolean
 ): AutomationRecord {
-  const db = openDatastore()
-  try {
-    return db
-      .transaction(() => {
-        const row = db
-          .query<AutomationDbRow, [string]>('SELECT * FROM automations WHERE id = ? LIMIT 1')
-          .get(id)
-        if (!row || !can_see(row, login)) {
-          throw new AutomationsError('Automation not found', 'not_found')
-        }
-        const prefs = get_user_preferences_with_db(db, email)
-        const set = new Set(prefs.pinnedAutomationIds)
-        if (pinned) set.add(id)
-        else set.delete(id)
-        set_user_preferences_with_db(db, email, { ...prefs, pinnedAutomationIds: [...set] })
-        return row_to_record(row, pinned)
-      })
-      .immediate()
-  } finally {
-    db.close()
-  }
+  using db = openDatastore()
+  return db
+    .transaction(() => {
+      const row = db
+        .query<AutomationDbRow, [string]>('SELECT * FROM automations WHERE id = ? LIMIT 1')
+        .get(id)
+      if (!row || !can_see(row, actor)) {
+        throw new AutomationsError('Automation not found', 'not_found')
+      }
+      const prefs = get_user_preferences_with_db(db, actor.email)
+      const set = new Set(prefs.pinnedAutomationIds)
+      if (pinned) set.add(id)
+      else set.delete(id)
+      set_user_preferences_with_db(db, actor.email, { ...prefs, pinnedAutomationIds: [...set] })
+      return row_to_record(row, pinned)
+    })
+    .immediate()
 }
 
 export function trim_report_activities(
@@ -514,9 +466,8 @@ export function finalize_automation_run(
         }
         const now = new Date().toISOString()
         const status: AutomationLifecycleStatus = options.restorePaused ? 'paused' : 'scheduled'
-        const zone = timezone()
         const next_run_at =
-          status === 'scheduled' && zone ? compute_next_run_at(row.cron, zone, new Date(now)) : null
+          status === 'scheduled' ? compute_next_run_at(row.cron, timezone(), new Date(now)) : null
         return (
           db.run(
             `UPDATE automations SET

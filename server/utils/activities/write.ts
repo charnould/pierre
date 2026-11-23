@@ -239,14 +239,20 @@ export const create_activity = (actor: string, input: CreateActivityInput): Acti
 
 export const create_trusted_activity = (
   actor: string,
-  input: TrustedCreateActivityInput
+  input: TrustedCreateActivityInput,
+  existing_db?: Database
 ): Activity => {
   const parsed = TrustedCreateActivityInput.parse(input)
   const { auteur, dateCreation, ...activity } = parsed
-  return create_activity_internal(actor, activity, {
-    ...(auteur ? { trustedAuthor: auteur } : {}),
-    ...(dateCreation ? { dateCreation } : {})
-  })
+  return create_activity_internal(
+    actor,
+    activity,
+    {
+      ...(auteur ? { trustedAuthor: auteur } : {}),
+      ...(dateCreation ? { dateCreation } : {})
+    },
+    existing_db
+  )
 }
 
 const can_edit = (activity: Activity, actor: string): boolean =>

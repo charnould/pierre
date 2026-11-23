@@ -1,4 +1,5 @@
 import { coreDataContractForFilename } from '../../../shared/core-data'
+import { intakeTableNameFromOriginalName } from '../../../shared/intakes'
 import { isKnowledgeSourceAssigned, normalize_knowledge_name } from '../../../shared/knowledge'
 import { publishModuleForPrompt } from '../../../shared/modules'
 import { version } from '../../package.json' with { type: 'json' }
@@ -28,6 +29,14 @@ export const knowledgePublishTargets = (
   return [...targets].sort()
 }
 
+export const knowledgeOutputName = (
+  source: Pick<KnowledgeSource, 'fileType' | 'originalName' | 'title'>
+): string =>
+  source.fileType === 'intake'
+    ? (intakeTableNameFromOriginalName(source.originalName) ??
+      normalize_knowledge_name(source.title))
+    : normalize_knowledge_name(source.title)
+
 export const assertNoOutputCollisions = (
   sources: readonly KnowledgeSource[],
   validProfileIds?: ReadonlySet<string>
@@ -48,7 +57,7 @@ export const assertNoOutputCollisions = (
     ) {
       throw new Error(`Invalid Core Data source: ${source.originalName}`)
     }
-    const key = normalize_knowledge_name(source.title)
+    const key = knowledgeOutputName(source)
     if (!key) throw new Error(`Invalid knowledge title: ${source.title}`)
     if (!coreContract && isReservedCoreDataTitle(key)) {
       throw new Error(`Reserved Core Data title ${source.title}; upload core.${key}.csv instead`)
@@ -82,6 +91,7 @@ export const catalogFingerprint = (sources: readonly KnowledgeSource[]): string 
       fileType: source.fileType,
       originalName: source.originalName,
       title: source.title,
+      description: source.description ?? null,
       sheetName: source.sheetName,
       headerRow: source.headerRow,
       headerHash: source.headerHash,
@@ -122,10 +132,13 @@ export const knowledgeProjections = (
 ): KnowledgeProjection[] =>
   snapshot.sources.flatMap((source) => {
     const coreDataTable = coreDataContractForFilename(source.originalName)?.table ?? null
+    const outputName = knowledgeOutputName(source)
     return knowledgePublishTargets(source, knownIds).map((access) => ({
       sourceId: source.id,
+      outputName,
       access,
       title: source.title,
+      description: source.description ?? null,
       fileType: source.fileType,
       contentHash: source.contentHash,
       headerRow: source.headerRow,
@@ -144,6 +157,7 @@ export const profileBuildFingerprint = (
       contentHash: projection.contentHash,
       fileType: projection.fileType,
       title: projection.title,
+      description: projection.description,
       headerRow: projection.headerRow,
       headerHash: projection.headerHash
     }))

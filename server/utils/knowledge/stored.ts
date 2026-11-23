@@ -11,11 +11,12 @@ import {
 const StoredSourceSchema = z
   .object({
     original_name: z.string(),
-    file_type: z.enum(['csv', 'md', 'docx', 'xlsx']),
+    file_type: z.enum(['csv', 'md', 'docx', 'xlsx', 'intake']),
     size_bytes: z.number(),
     content_hash: z.string().nullable(),
     origin: z.enum(['ui', 'cli']),
     title: z.string(),
+    description: z.string().nullable().optional(),
     sheet_name: z.string().nullable(),
     header_row: z.number().int().positive().nullable(),
     header_hash: z.string().nullable(),
@@ -36,7 +37,16 @@ const StoredDiagnosticSchema = z
 const StoredBuildSchema = z
   .object({
     status: z.enum(['queued', 'running', 'succeeded', 'failed']),
-    trigger: z.enum(['startup', 'cron', 'upload', 'patch', 'delete', 'manual', 'chatbot']),
+    trigger: z.enum([
+      'startup',
+      'cron',
+      'upload',
+      'patch',
+      'delete',
+      'manual',
+      'chatbot',
+      'intake'
+    ]),
     requested_by: z.string().nullable(),
     catalog_fingerprint: z.string().nullable(),
     started_at: z.string().nullable(),
@@ -64,6 +74,7 @@ const storedSourceDocument = (document: KnowledgeSourceDocument) =>
     content_hash: document.contentHash,
     origin: document.origin,
     title: document.title,
+    ...(document.description ? { description: document.description } : {}),
     sheet_name: document.sheetName,
     header_row: document.headerRow,
     header_hash: document.headerHash,
@@ -80,6 +91,7 @@ export const parseStoredSourceDocument = (raw: unknown): KnowledgeSourceDocument
     contentHash: stored.content_hash,
     origin: stored.origin,
     title: stored.title,
+    ...(stored.description ? { description: stored.description } : {}),
     sheetName: stored.sheet_name,
     headerRow: stored.header_row,
     headerHash: stored.header_hash,

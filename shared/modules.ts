@@ -3,6 +3,7 @@ import { PROMPTS } from './prompts'
 export const BUSINESS_MODULES = [
   { id: 'tickets', label: 'Répondre aux réclamations' },
   { id: 'automations', label: 'Créer des automatisations' },
+  { id: 'intake', label: 'Collectes' },
   { id: 'bulk', label: 'Communiquer à grande échelle' },
   { id: 'about', label: 'Obtenir une synthèse' },
   { id: 'repayment', label: 'Piloter les impayés' },
@@ -25,6 +26,7 @@ const ACTIVITY_MODULES = {
   a_qualifier: 'tickets',
   repayment: 'repayment',
   automations: 'automations',
+  intake: 'intake',
   bulk: 'bulk'
 } as const satisfies Partial<Record<string, BusinessModuleId>>
 

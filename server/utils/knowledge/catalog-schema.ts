@@ -27,11 +27,12 @@ export const KnowledgeSourceDocumentSchema = z
       .trim()
       .min(1)
       .refine((name) => name === basename(name), { message: 'Invalid filename' }),
-    fileType: z.enum(['csv', 'md', 'docx', 'xlsx']),
+    fileType: z.enum(['csv', 'md', 'docx', 'xlsx', 'intake']),
     sizeBytes: z.number().int().nonnegative(),
     contentHash: Sha256Hex.nullable().default(null),
     origin: z.enum(['ui', 'cli']),
     title: z.string().trim().min(1),
+    description: z.string().trim().min(1).nullable().optional(),
     sheetName: z.string().trim().min(1).nullable().default(null),
     headerRow: z.number().int().positive().nullable().default(null),
     headerHash: Sha256Hex.nullable().default(null),
@@ -71,7 +72,16 @@ const KnowledgeDiagnosticSchema = z
 export const KnowledgeBuildDocumentSchema = z
   .object({
     status: z.enum(['queued', 'running', 'succeeded', 'failed']),
-    trigger: z.enum(['startup', 'cron', 'upload', 'patch', 'delete', 'manual', 'chatbot']),
+    trigger: z.enum([
+      'startup',
+      'cron',
+      'upload',
+      'patch',
+      'delete',
+      'manual',
+      'chatbot',
+      'intake'
+    ]),
     requestedBy: z.string().trim().min(1).nullable(),
     catalogFingerprint: z.string().nullable().default(null),
     startedAt: z.iso.datetime().nullable(),
@@ -113,9 +123,11 @@ export type KnowledgeBuild = KnowledgeBuildDocument & {
 
 export type KnowledgeProjection = {
   sourceId: string
+  outputName: string
   access: string
   title: string
-  fileType: 'csv' | 'md' | 'docx' | 'xlsx'
+  description: string | null
+  fileType: 'csv' | 'md' | 'docx' | 'xlsx' | 'intake'
   contentHash: string | null
   headerRow: number | null
   headerHash: string | null

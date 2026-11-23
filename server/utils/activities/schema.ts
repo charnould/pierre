@@ -13,7 +13,7 @@ import { isCivilDay } from '../../../shared/activity-content'
 import { isRepaymentPlanEventType } from '../../../shared/repayment-case-file'
 
 export const MENTION_RE = /@([a-z0-9._-]+)/gi
-export const AUTHOR_RE = /^(user|agent|tenant|candidate|automation|system|external):.+$/
+export const AUTHOR_RE = /^(user|agent|tenant|candidate|automation|intake|system|external):.+$/
 
 const MentionSchema = z.object({
   destinataire: z.string().min(1),
@@ -106,7 +106,7 @@ export const TrustedCreateActivityInput = z
     ...CreateActivityFields,
     auteur: z
       .string()
-      .regex(/^(agent|automation|system):.+$/)
+      .regex(/^(agent|automation|intake|system):.+$/)
       .optional(),
     bulkId: z.string().trim().min(1).nullable().optional(),
     executionId: z.string().trim().min(1).nullable().optional(),

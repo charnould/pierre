@@ -15,12 +15,14 @@ import { classifyCarl } from './routes/carl'
 import { chat } from './routes/chat'
 import { communications } from './routes/communications'
 import { datastore } from './routes/datastore'
+import { intakes } from './routes/intakes'
 import { knowledge } from './routes/knowledge'
 import { ledger } from './routes/ledger'
 import { publicRoutes } from './routes/public'
+import { publicIntake } from './routes/public-intake'
 import { repayment } from './routes/repayment'
 import { setup } from './routes/setup'
-import { getSpeech, postSpeech } from './routes/speech'
+import { getSpeech, postSpeech, speechBodyLimit } from './routes/speech'
 import { postTelemetry } from './routes/telemetry'
 import { tickets } from './routes/tickets'
 import { webhooks } from './routes/webhooks'
@@ -64,13 +66,31 @@ const smallJsonLimit = bodyLimit({
 export const createApp = () => {
   const app = new Hono()
 
-  app.use(
-    secureHeaders({
-      crossOriginResourcePolicy: false,
-      contentSecurityPolicy: {
-        frameAncestors: ["'self'", 'http://localhost:*', '*']
-      }
-    })
+  const defaultSecureHeaders = secureHeaders({
+    crossOriginResourcePolicy: false,
+    contentSecurityPolicy: {
+      frameAncestors: ["'self'", 'http://localhost:*', '*']
+    }
+  })
+  const intakeSecureHeaders = secureHeaders({
+    crossOriginResourcePolicy: false,
+    contentSecurityPolicy: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:'],
+      fontSrc: ["'self'", 'data:'],
+      connectSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+      frameAncestors: ["'none'"]
+    }
+  })
+  app.use((c, next) =>
+    c.req.path.startsWith('/repondre/')
+      ? intakeSecureHeaders(c, next)
+      : defaultSecureHeaders(c, next)
   )
 
   app.use('/assets/*', cors())
@@ -115,9 +135,11 @@ export const createApp = () => {
   app.all('/auth/*', (c) => getAuth().handler(c.req.raw))
 
   app.route('/', publicRoutes)
+  app.route('/repondre', publicIntake)
   app.route('/', account)
   app.route('/activities', activities)
   app.route('/automations', automations)
+  app.route('/intakes', intakes)
   app.route('/bulk', bulk)
   app.route('/tickets', tickets)
   app.route('/ledger', ledger)
@@ -137,16 +159,7 @@ export const createApp = () => {
   )
   app.post('/carl', smallJsonLimit, classifyCarl)
   app.get('/speech', getSpeech)
-  app.post(
-    '/speech/transcribe',
-    authenticate,
-    bodyLimit({
-      maxSize: 4 * 1024 * 1024,
-      onError: (c) =>
-        c.json({ error: { code: 'body_too_large', message: 'La dictée est trop longue.' } }, 413)
-    }),
-    postSpeech
-  )
+  app.post('/speech/transcribe', authenticate, speechBodyLimit, postSpeech)
   app.get('/up', (c) => c.text('ok'))
 
   app.notFound((c) => {

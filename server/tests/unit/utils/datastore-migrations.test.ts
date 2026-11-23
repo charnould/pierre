@@ -47,7 +47,10 @@ describe('datastore migrations', () => {
           'SELECT version, name FROM schema_migrations ORDER BY version'
         )
         .all()
-    ).toEqual([{ version: 1, name: 'baseline' }])
+    ).toEqual([
+      { version: 1, name: 'baseline' },
+      { version: 2, name: 'intakes' }
+    ])
     expect(
       db
         .query<{ n: number }, []>("SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'setup'")
@@ -74,6 +77,7 @@ describe('datastore migrations', () => {
            'communication_provider_operations',
            'contacts',
            'conversations',
+           'intakes',
            'knowledge_records',
            'llm_runs',
            'session',
@@ -111,6 +115,7 @@ describe('datastore migrations', () => {
       'idx_automations_stuck',
       'idx_communication_provider_operations_reconcile',
       'idx_contacts_stale_sms',
+      'intakes',
       'knowledge_records',
       'llm_runs',
       'session',

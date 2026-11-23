@@ -4,7 +4,7 @@ import type { BusinessModuleId } from './modules'
 export type KnowledgeSource = {
   id: string
   originalName: string
-  fileType: 'csv' | 'md' | 'docx' | 'xlsx'
+  fileType: 'csv' | 'md' | 'docx' | 'xlsx' | 'intake'
   sizeBytes: number
   contentHash: string | null
   origin: 'ui' | 'cli'
@@ -76,7 +76,7 @@ type KnowledgeDiagnostic = {
 export type KnowledgeBuild = {
   id: string
   status: 'queued' | 'running' | 'succeeded' | 'failed'
-  trigger: 'startup' | 'cron' | 'upload' | 'patch' | 'delete' | 'manual' | 'chatbot'
+  trigger: 'startup' | 'cron' | 'upload' | 'patch' | 'delete' | 'manual' | 'chatbot' | 'intake'
   requestedBy: string | null
   catalogFingerprint: string | null
   startedAt: string | null

@@ -2,6 +2,7 @@ import { Database } from 'bun:sqlite'
 
 import { openDatastore } from '../datastore-db'
 import baselineSql from './000.sql' with { type: 'text' }
+import intakesSql from './001.sql' with { type: 'text' }
 
 export type DatastoreMigration = {
   version: number
@@ -10,7 +11,8 @@ export type DatastoreMigration = {
 }
 
 export const APP_MIGRATIONS: readonly DatastoreMigration[] = [
-  { version: 1, name: 'baseline', sql: baselineSql }
+  { version: 1, name: 'baseline', sql: baselineSql },
+  { version: 2, name: 'intakes', sql: intakesSql }
 ]
 
 const SCHEMA_MIGRATIONS_SQL = `
