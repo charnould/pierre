@@ -1,4 +1,8 @@
+import type Docxtemplater from 'docxtemplater'
+
 export const MAX_BULK_DOCX_BYTES = 1_000_000
+
+type DocxPart = Docxtemplater.DXT.Part
 
 export type BulkDocxUpload = {
   filename: string
@@ -33,12 +37,10 @@ export async function inspectBulkDocx(
     throw new Error('Le fichier Word doit peser entre 1 octet et 1 Mo.')
   }
 
-  const [{ default: Docxtemplater }, { default: InspectModule }, { default: PizZip }] =
-    await Promise.all([
-      import('docxtemplater'),
-      import('docxtemplater/js/inspect-module.js'),
-      import('pizzip')
-    ])
+  const [{ default: Docxtemplater }, { default: PizZip }] = await Promise.all([
+    import('docxtemplater'),
+    import('pizzip')
+  ])
   let zip: InstanceType<typeof PizZip>
   try {
     zip = new PizZip(buffer)
@@ -49,20 +51,26 @@ export async function inspectBulkDocx(
     throw new Error('Le fichier sélectionné n’est pas un document Word valide.')
   }
 
-  const inspect = new InspectModule()
+  const parts: DocxPart[] = []
   new Docxtemplater(zip, {
     delimiters: { start: '{{', end: '}}' },
     linebreaks: true,
-    modules: [inspect],
+    modules: [
+      {
+        set(options: { inspect?: { postparsed?: DocxPart[] } }) {
+          if (options.inspect?.postparsed) parts.push(...options.inspect.postparsed)
+        }
+      }
+    ],
     paragraphLoop: true
   })
 
-  const structured = inspect.getAllStructuredTags()
-  if (structured.some((part) => part.module === 'loop' || part.subparsed?.length)) {
+  const tags = parts.filter((part) => part.type === 'placeholder')
+  if (tags.some((part) => part.module === 'loop' || part.subparsed?.length)) {
     throw new Error('Les boucles et conditions ne sont pas autorisées dans un modèle Bulk.')
   }
 
-  const placeholders = Object.keys(inspect.getAllTags())
+  const placeholders = [...new Set(tags.map((part) => part.value))]
   for (const placeholder of placeholders) {
     if (!identifier.test(placeholder)) {
       throw new Error(`Placeholder Word invalide : {{${placeholder}}}.`)

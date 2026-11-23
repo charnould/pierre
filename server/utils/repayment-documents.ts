@@ -1,5 +1,4 @@
 import Docxtemplater from 'docxtemplater'
-import InspectModule from 'docxtemplater/js/inspect-module.js'
 import PizZip from 'pizzip'
 import { type FontBytesByVariant } from 'reamkit'
 import { z } from 'zod'
@@ -163,14 +162,20 @@ function inspectTemplate(content: Uint8Array): string[] | string {
   let tags: string[]
   try {
     zip = new PizZip(content)
-    const inspect = new InspectModule()
+    const found = new Set<string>()
     new Docxtemplater(zip, {
       delimiters: { start: '{{', end: '}}' },
       linebreaks: true,
-      modules: [inspect],
+      modules: [
+        {
+          set(options: { inspect?: { postparsed?: Docxtemplater.DXT.Part[] } }) {
+            if (options.inspect?.postparsed) collectTags(options.inspect.postparsed, found)
+          }
+        }
+      ],
       paragraphLoop: true
     })
-    tags = tagPaths(inspect.getAllTags() as Record<string, unknown>)
+    tags = [...found]
     const unknown = tags.find((tag) => !isRepaymentDocumentTag(tag))
     if (unknown) return `Le modèle contient la balise inconnue {{${unknown}}}.`
   } catch {
@@ -179,13 +184,13 @@ function inspectTemplate(content: Uint8Array): string[] | string {
   return fontIssue(zip) ?? tags
 }
 
-function tagPaths(tags: Record<string, unknown>, prefix = ''): string[] {
-  return Object.entries(tags).flatMap(([key, value]) => {
-    const path = prefix ? `${prefix}.${key}` : key
-    const nested =
-      value && typeof value === 'object' ? tagPaths(value as Record<string, unknown>, path) : []
-    return [path, ...nested]
-  })
+function collectTags(parts: Docxtemplater.DXT.Part[], found: Set<string>, prefix = '') {
+  for (const part of parts) {
+    if (part.type !== 'placeholder') continue
+    const path = prefix ? `${prefix}.${part.value}` : part.value
+    found.add(path)
+    if (part.subparsed) collectTags(part.subparsed, found, path)
+  }
 }
 
 function fontIssue(zip: PizZip): string | null {
