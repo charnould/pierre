@@ -7,6 +7,7 @@ import { start_bulk_scheduler } from './utils/bulk/scheduler/queue'
 import { refresh_stale_sms_contacts } from './utils/contacts'
 import { openDatastore } from './utils/datastore-db'
 import { ensureEnvAdmin } from './utils/ensure-env-admin'
+import { run_due_intake_digests } from './utils/intakes/notify'
 import { initializeKnowledgeBuildCoordinator } from './utils/knowledge/build-coordinator'
 import { startMailevaReconciliation } from './utils/maileva/track'
 import { datastorePaths } from './utils/paths'
@@ -82,6 +83,9 @@ if (command) {
   })
   Bun.cron('* * * * *', async () => {
     await run_due_automations()
+  })
+  Bun.cron('0 * * * *', () => {
+    run_due_intake_digests()
   })
   const { createApp } = await import('./app')
   const application = createApp()

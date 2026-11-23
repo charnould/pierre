@@ -182,7 +182,12 @@ export const resolve_activity_facets = (
   contexte: ActivityContext,
   ref: string
 ): ActivityFacets => {
-  if (contexte === 'automations' || contexte === 'bulk' || contexte === 'a_qualifier') {
+  if (
+    contexte === 'automations' ||
+    contexte === 'intake' ||
+    contexte === 'bulk' ||
+    contexte === 'a_qualifier'
+  ) {
     return { id_client: null, id_locataire: null, id_lot: null }
   }
 

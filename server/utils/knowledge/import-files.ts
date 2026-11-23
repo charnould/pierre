@@ -41,7 +41,7 @@ export type ImportedKnowledgeSource = {
   changed: boolean
 }
 
-type FileType = KnowledgeSource['fileType']
+type FileType = Exclude<KnowledgeSource['fileType'], 'intake'>
 type UploadOrigin = 'ui' | 'cli'
 
 type PreparedSourceWrite =

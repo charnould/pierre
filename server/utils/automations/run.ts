@@ -1,6 +1,10 @@
 import type { AutomationRecord } from '../../../shared/automations'
 import { create_trusted_activity } from '../activities/write'
-import { timezone } from '../setup-store'
+import {
+  canManageCollaboratorResource,
+  type CollaboratorActor,
+  notificationRecipients
+} from '../collaborator-access'
 import { execute_automation } from './execute'
 import {
   AutomationsError,
@@ -35,7 +39,7 @@ export function reset_automation_executor(): void {
 }
 
 function notify_run(automation: AutomationRecord, result: ExecutorResult): void {
-  const recipients = [...new Set([automation.owner, ...automation.mentions])]
+  const recipients = notificationRecipients(automation.owner, automation.mentions)
   create_trusted_activity(automation.owner, {
     contexte: 'automations',
     ref: automation.id,
@@ -83,7 +87,7 @@ let scheduler_active = false
 
 /** Reclaim crash-stuck `running` rows, then run all due automations. */
 export async function run_due_automations(): Promise<void> {
-  if (!active_executor || scheduler_active || !timezone()) return
+  if (!active_executor || scheduler_active) return
   scheduler_active = true
   try {
     const dueBefore = new Date().toISOString()
@@ -106,8 +110,11 @@ export async function run_due_automations(): Promise<void> {
   }
 }
 
-/** Manual run by owner — allowed while paused (restores paused, no next_run_at). */
-export async function run_automation_now(id: string, owner: string): Promise<AutomationRecord> {
+/** Manual run by owner or administrator — allowed while paused (restores paused, no next_run_at). */
+export async function run_automation_now(
+  id: string,
+  actor: CollaboratorActor
+): Promise<AutomationRecord> {
   if (!active_executor) {
     throw new AutomationsError('Automation executor is not configured', 'unavailable')
   }
@@ -115,7 +122,7 @@ export async function run_automation_now(id: string, owner: string): Promise<Aut
   if (!automation) {
     throw new AutomationsError('Automation not found', 'not_found')
   }
-  if (automation.owner.toLowerCase() !== owner.trim().toLowerCase()) {
+  if (!canManageCollaboratorResource(automation.owner, actor)) {
     throw new AutomationsError('Forbidden', 'forbidden')
   }
   const restorePaused = automation.status === 'paused'

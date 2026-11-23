@@ -19,6 +19,17 @@ import {
 import { dropSourceTable } from './source-tables'
 import { stringifyStoredSourceDocument } from './stored'
 
+export class KnowledgeSourceError extends Error {
+  constructor(
+    readonly status: 400 | 409,
+    readonly code: string,
+    message: string
+  ) {
+    super(message)
+    this.name = 'KnowledgeSourceError'
+  }
+}
+
 export const assertKnowledgeCatalogValidInDb = (
   db: Database,
   validProfileIds?: ReadonlySet<string>
@@ -41,6 +52,22 @@ export const listKnowledgeSourceContents = (): Array<
       .all()
       .map((row) => ({ ...parseSourceRow(row), content: row.content }))
   )
+
+export const findKnowledgeSourceByOriginalNameInDb = (
+  db: Database,
+  originalName: string
+): KnowledgeSource | null => {
+  const row = db
+    .query<KnowledgeRecordRow, [string]>(
+      `SELECT id, kind, document, created_at, updated_at
+       FROM knowledge_records
+       WHERE kind = 'source'
+         AND lower(json_extract(document, '$.original_name')) = ?
+       LIMIT 1`
+    )
+    .get(originalName.normalize('NFC').toLowerCase())
+  return row ? parseSourceRow(row) : null
+}
 
 export const findKnowledgeSourcesByFilename = (originalName: string): KnowledgeSource[] => {
   const target = originalName.normalize('NFC').toLocaleLowerCase('fr')
@@ -127,6 +154,13 @@ export const updateKnowledgeSourceMetadata = (
         const row = getRecord(db, id, 'source')
         if (!row) return null
         const current = parseSourceRow(row)
+        if (current.fileType === 'intake' && patch.title !== current.title) {
+          throw new KnowledgeSourceError(
+            400,
+            'invalid_source',
+            'Le nom d’une collecte ne peut pas être modifié depuis l’Encyclopédie.'
+          )
+        }
         if (expectedUpdatedAt && current.updatedAt !== expectedUpdatedAt) {
           throw new Error('Knowledge source was modified by another administrator')
         }
@@ -149,7 +183,22 @@ export const updateKnowledgeSourceMetadata = (
   )
 
 export const deleteKnowledgeSource = (id: string): KnowledgeSource | null =>
-  withKnowledgeDb((db) => db.transaction(() => deleteKnowledgeSourceInDb(db, id)).immediate())
+  withKnowledgeDb((db) =>
+    db
+      .transaction(() => {
+        const row = getRecord(db, id, 'source')
+        if (!row) return null
+        if (parseSourceRow(row).fileType === 'intake') {
+          throw new KnowledgeSourceError(
+            409,
+            'intake_managed',
+            'Une collecte doit être retirée ou supprimée depuis le module Collectes.'
+          )
+        }
+        return deleteKnowledgeSourceInDb(db, id)
+      })
+      .immediate()
+  )
 
 export const getKnowledgeCatalogSnapshot = (): KnowledgeCatalogSnapshot => {
   const sources = listKnowledgeSources()

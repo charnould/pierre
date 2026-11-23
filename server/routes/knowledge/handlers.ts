@@ -16,6 +16,7 @@ import {
   KnowledgeModuleIdsSchema,
   KnowledgeProfileIdsSchema,
   type KnowledgeSource,
+  KnowledgeSourceError,
   listKnowledgeBuilds,
   updateKnowledgeSourceMetadata
 } from '../../utils/knowledge/catalog'
@@ -184,6 +185,9 @@ export const patchKnowledgeSource = async (c: AuthContext) => {
     if (!source) return apiError(c, 404, 'source_not_found', 'Source introuvable.')
     return c.json({ data: { source: toKnowledgeSourceDto(source) } })
   } catch (error) {
+    if (error instanceof KnowledgeSourceError) {
+      return apiError(c, error.status, error.code, error.message)
+    }
     return apiError(
       c,
       409,
@@ -196,15 +200,17 @@ export const patchKnowledgeSource = async (c: AuthContext) => {
 export const deleteKnowledgeSourceController = async (c: AuthContext) => {
   const id = c.req.param('id')
   if (!id) return apiError(c, 404, 'source_not_found', 'Source introuvable.')
-  const source = getKnowledgeSource(id)
-  if (!source) return apiError(c, 404, 'source_not_found', 'Source introuvable.')
 
   try {
-    deleteKnowledgeSource(source.id)
-  } catch {
+    const deleted = deleteKnowledgeSource(id)
+    if (!deleted) return apiError(c, 404, 'source_not_found', 'Source introuvable.')
+    return c.json({ data: { id: deleted.id } })
+  } catch (error) {
+    if (error instanceof KnowledgeSourceError) {
+      return apiError(c, error.status, error.code, error.message)
+    }
     return apiError(c, 500, 'delete_failed', 'La source ne peut pas être supprimée.')
   }
-  return c.json({ data: { id: source.id } })
 }
 
 export const getKnowledgeBuilds = (c: AuthContext) =>

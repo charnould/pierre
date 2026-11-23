@@ -193,15 +193,14 @@ describe('automation route classes', () => {
     }
   })
 
-  it('refuses to create when the instance has no timezone', async () => {
+  it('falls back to Europe/Paris when the instance has no global setup', async () => {
     const db = new Database(paths.database)
     db.run("DELETE FROM setup WHERE id = 'global'")
     db.close()
     const response = await app.request('/automations', request('POST', reportBody))
-    expect(response.status).toBe(400)
-    expect(await response.json()).toMatchObject({
-      error: { code: 'invalid', message: 'Automatisations non paramétrées.' }
-    })
+    expect(response.status).toBe(201)
+    const body = (await response.json()) as { data: { nextRunAt: string | null } }
+    expect(typeof body.data.nextRunAt).toBe('string')
   })
 
   it('refuses to run when no real executor is configured', async () => {

@@ -448,9 +448,9 @@ export function name(): string {
   return typeof value === 'string' && value.trim() ? value.trim() : 'PIERRE'
 }
 
-export function timezone(): string | null {
+export function timezone(): string {
   const value = jsonText('global')?.timezone
-  return typeof value === 'string' && isIana(value.trim()) ? value.trim() : null
+  return typeof value === 'string' && isIana(value.trim()) ? value.trim() : 'Europe/Paris'
 }
 
 export function internalChatbot(id: string): any | null {

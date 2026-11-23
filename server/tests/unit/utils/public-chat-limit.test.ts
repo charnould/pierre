@@ -1,10 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 
-import {
-  beginPublicChat,
-  publicChatAddress,
-  resetPublicChatLimit
-} from '../../../utils/public-chat-limit'
+import { clientAddress } from '../../../utils/client-address'
+import { beginPublicChat, resetPublicChatLimit } from '../../../utils/public-chat-limit'
 
 const originalPerMinute = Bun.env['PUBLIC_CHAT_PER_MINUTE']
 const originalMaxActive = Bun.env['SMOLVM_MAX_ACTIVE']
@@ -27,8 +24,8 @@ describe('public chat limit', () => {
     const request = new Request('http://localhost/chat', {
       headers: { 'x-forwarded-for': '203.0.113.4, 10.0.0.8' }
     })
-    expect(publicChatAddress(request)).toBe('10.0.0.8')
-    expect(publicChatAddress(new Request('http://localhost/chat'))).toBe('local')
+    expect(clientAddress(request)).toBe('10.0.0.8')
+    expect(clientAddress(new Request('http://localhost/chat'))).toBe('local')
   })
 
   it('limits one address and the number of active anonymous streams', () => {

@@ -128,7 +128,10 @@ const describe_columns = (db: Database, table: string): ColDescription[] => {
  * @param db - Open SQLite database instance.
  * @returns Minified JSON string, or `null` if the database contains no tables and no documents.
  */
-const build_readme = (db: Database): string | null => {
+const build_readme = (
+  db: Database,
+  tableDescriptions?: ReadonlyMap<string, string>
+): string | null => {
   const tables = db
     .query<TableRow, []>(
       `SELECT name FROM sqlite_master WHERE type='table'
@@ -187,7 +190,13 @@ const build_readme = (db: Database): string | null => {
       return base
     })
 
-    return { name, rows, columns }
+    const description = tableDescriptions?.get(name)?.trim()
+    return {
+      name,
+      ...(description ? { description } : {}),
+      rows,
+      columns
+    }
   })
 
   const describedTables = schema['tables'] as Array<{ columns?: Array<{ nature?: string }> }>
@@ -222,10 +231,14 @@ const build_readme = (db: Database): string | null => {
   return `\`\`\`json\n${JSON.stringify(schema)}\n\`\`\``
 }
 
-export const finishProfileDatabase = (db: Database, fingerprint: string): void => {
+export const finishProfileDatabase = (
+  db: Database,
+  fingerprint: string,
+  tableDescriptions?: ReadonlyMap<string, string>
+): void => {
   db.run('DROP TABLE IF EXISTS _readme')
   db.run('CREATE TABLE _readme (content TEXT)')
-  db.run('INSERT INTO _readme (content) VALUES (?)', [build_readme(db)])
+  db.run('INSERT INTO _readme (content) VALUES (?)', [build_readme(db, tableDescriptions)])
   db.run('DROP TABLE IF EXISTS _build')
   db.run('CREATE TABLE _build (fingerprint TEXT NOT NULL)')
   db.run('INSERT INTO _build (fingerprint) VALUES (?)', [fingerprint])

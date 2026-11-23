@@ -93,6 +93,27 @@ export const normalize_telephone = (raw: unknown): { value: string; status: Tele
   return { value: e164, status: 'invalid' }
 }
 
+/**
+ * Validates and normalizes a French phone number (mainland + DROM) into exact 10 national digits
+ * without spaces (e.g. `0612345678`), or `null` if invalid.
+ */
+const FRENCH_PHONE_REGIONS = ['FR', 'RE', 'GP', 'MQ', 'GF', 'YT'] as const
+const FRENCH_PHONE_REGION_SET = new Set<string>(FRENCH_PHONE_REGIONS)
+
+export const normalize_french_national_phone = (raw: string): string | null => {
+  const cleaned = clean_phone_digits(raw)
+  if (cleaned === '' || cleaned === '+' || !/^\+?\d+$/.test(cleaned)) return null
+  const candidates = cleaned.startsWith('+') ? (['FR'] as const) : FRENCH_PHONE_REGIONS
+  for (const region of candidates) {
+    const phone = parsePhoneNumberFromString(cleaned, region)
+    if (!phone?.isValid()) continue
+    if (!phone.country || !FRENCH_PHONE_REGION_SET.has(phone.country)) continue
+    const national = phone.formatNational().replace(/\D/g, '')
+    if (/^\d{10}$/.test(national)) return national
+  }
+  return null
+}
+
 /** Normalize + classify an email (lowercase trim; syntax via Zod). */
 export const normalize_email = (raw: unknown): { value: string; status: EmailStatus } => {
   const value = String(raw ?? '')

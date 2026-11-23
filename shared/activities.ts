@@ -4,6 +4,7 @@ export const ACTIVITY_CONTEXTS = [
   'tickets',
   'repayment',
   'automations',
+  'intake',
   'bulk',
   'a_qualifier'
 ] as const
@@ -70,6 +71,7 @@ export const ACTIVITY_TYPES = [
   'artifact.discarded',
   'artifact.feedback_recorded',
   'automation.reported',
+  'intake.submitted',
   'bulk.ran',
   'bulk.completed',
   'bulk.applied',

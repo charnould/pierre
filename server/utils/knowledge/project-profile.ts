@@ -88,7 +88,10 @@ const copySqlTable = (db: Database, table: ProfileSqlTable): void => {
       `SELECT name, type FROM pragma_table_info(?, ?) ORDER BY cid`
     )
     .all(table.source, 'canonical')
-    .filter((column) => !is_knowledge_pii_column(column.name))
+    .filter(
+      (column) =>
+        column.type.trim().toUpperCase() !== 'BLOB' && !is_knowledge_pii_column(column.name)
+    )
   if (columns.length === 0) return
   const definitions = columns
     .map((column) => `${quote(column.name)} ${column.type || 'TEXT'}`)
@@ -106,6 +109,7 @@ export const buildProfileDatabase = (options: {
   rowTables: readonly ProfileRowTable[]
   documents: readonly ProfileDocument[]
   fingerprint: string
+  tableDescriptions?: ReadonlyMap<string, string>
 }): void => {
   const db = new Database(options.path, { create: true })
   try {
@@ -146,7 +150,7 @@ export const buildProfileDatabase = (options: {
       for (const document of options.documents) {
         insert.run(document.content, document.filename, document.url)
       }
-      finishProfileDatabase(db, options.fingerprint)
+      finishProfileDatabase(db, options.fingerprint, options.tableDescriptions)
     }).immediate()
     db.run('DETACH DATABASE canonical')
   } finally {

@@ -2,7 +2,7 @@ import { link, mkdir, readdir, rename, rm } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 
 import { coreDataContractForFilename } from '../../../shared/core-data'
-import { normalize_knowledge_name } from '../../../shared/knowledge'
+import { intakeTableName } from '../../../shared/intakes'
 import { qualifyReclamations } from '../carl-reclamations'
 import { openDatastore } from '../datastore-db'
 import { datastorePaths } from '../paths'
@@ -105,8 +105,9 @@ const documentsFor = (
     if (!source?.content) {
       throw new Error(`Contenu introuvable : ${projection.title}`)
     }
-    const filename = normalize_knowledge_name(projection.title)
-    return filename ? [{ filename, ...documentParts(source.content) }] : []
+    return projection.outputName
+      ? [{ filename: projection.outputName, ...documentParts(source.content) }]
+      : []
   })
   return [...documents, ...community]
 }
@@ -170,10 +171,12 @@ export const runKnowledgePipeline = async (buildId: string): Promise<KnowledgePi
       const sqlTables = assigned.flatMap((projection) => {
         if (projection.fileType === 'md' || projection.fileType === 'docx') return []
         if (projection.coreDataTable && corePayloads) return []
-        const source = projection.coreDataTable
-          ? projection.coreDataTable
-          : sourceTableName(projection.sourceId)
-        return [{ source, target: normalize_knowledge_name(projection.title) }]
+        if (!projection.outputName) return []
+        const source =
+          projection.fileType === 'intake'
+            ? intakeTableName(projection.outputName)
+            : (projection.coreDataTable ?? sourceTableName(projection.sourceId))
+        return [{ source, target: projection.outputName }]
       })
       const rowTables = assigned.flatMap((projection) => {
         if (!projection.coreDataTable || !corePayloads) return []
@@ -181,19 +184,26 @@ export const runKnowledgePipeline = async (buildId: string): Promise<KnowledgePi
         if (!payload) return []
         return [
           {
-            target: normalize_knowledge_name(projection.title),
+            target: projection.outputName,
             columns: payload.columns,
             rows: payload.rows
           }
         ]
       })
+      const profileDescriptions = new Map<string, string>()
+      for (const projection of assigned) {
+        if (projection.outputName && projection.description) {
+          profileDescriptions.set(projection.outputName, projection.description)
+        }
+      }
       buildProfileDatabase({
         path: candidate,
         datastorePath: paths.database,
         sqlTables,
         rowTables,
         documents: documentsFor(assigned, profile.communityKnowledge ? community : []),
-        fingerprint
+        fingerprint,
+        tableDescriptions: profileDescriptions
       })
       assertProfileDatabase(candidate)
       candidates.push({ profileId: profile.id, path: candidate })

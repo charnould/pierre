@@ -67,7 +67,7 @@ function isoWeek(year: number, month: number, day: number): number {
  *
  * Example: "Monday, July 14, 2025 (Week 29) at 09:30 – today is a French public holiday (Fête nationale)"
  */
-export const today_is = (now = new Date(), zone = timezone() ?? 'UTC'): string => {
+export const today_is = (now = new Date(), zone = timezone()): string => {
   const parts = zonedDateParts(now, zone)
   const date = new Intl.DateTimeFormat('en-US', {
     timeZone: zone,

@@ -31,11 +31,13 @@ export {
 export {
   assertKnowledgeCatalogValidInDb,
   deleteKnowledgeSource,
+  findKnowledgeSourceByOriginalNameInDb,
   findKnowledgeSourcesByFilename,
   getKnowledgeCatalogSnapshot,
   getKnowledgeSource,
   insertKnowledgeSource,
   insertKnowledgeSourceInDb,
+  KnowledgeSourceError,
   listKnowledgeSourceContents,
   listKnowledgeSources,
   updateKnowledgeSourceFileInDb,

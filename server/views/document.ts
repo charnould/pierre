@@ -7,6 +7,7 @@ const VIEWPORT =
 
 export function htmlPage(params: {
   title: string
+  stylesheet?: string
   bodyClass?: string
   head?: ReturnType<typeof html>
   body: ReturnType<typeof html>
@@ -16,7 +17,7 @@ export function htmlPage(params: {
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="${VIEWPORT}" />
-        <link rel="stylesheet" href="${chatCss}" />
+        <link rel="stylesheet" href="${params.stylesheet ?? chatCss}" />
         ${params.head ?? html``}
         <title>${params.title}</title>
       </head>

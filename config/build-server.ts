@@ -2,7 +2,7 @@ import { join } from 'node:path'
 
 import { $ } from 'bun'
 
-import { buildChat } from '../desktop/build.ts'
+import { buildServerWeb } from '../desktop/build.ts'
 
 const ROOT = import.meta.dir.replace(/\/config$/, '')
 const SERVER = join(ROOT, 'server')
@@ -11,7 +11,7 @@ const EMBED = join(SERVER, 'assets/embed')
 
 await $`rm -rf ${DIST}/css ${DIST}/js ${DIST}/assets ${DIST}/.vite ${DIST}/manifest.json`
 
-await buildChat(DIST)
+await buildServerWeb(DIST)
 
 await Bun.write(
   join(DIST, 'css/pierre-embed-frame.css'),
