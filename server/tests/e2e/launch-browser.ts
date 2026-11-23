@@ -9,7 +9,11 @@ export function createE2EView(
   dimensions: { width: number; height: number } = { width: 1080, height: 1024 }
 ): Bun.WebView {
   return new Bun.WebView({
-    backend: { type: 'chrome', url: false },
+    backend: {
+      type: 'chrome',
+      url: false,
+      ...(process.platform === 'linux' ? { argv: ['--no-sandbox'] } : {})
+    },
     dataStore: 'ephemeral',
     width: dimensions.width,
     height: dimensions.height
