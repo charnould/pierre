@@ -1,113 +1,118 @@
-name: CI/CD Pipeline
+name: CI
 
 on:
   pull_request:
-    branches: ['master']
+    branches: [master]
   push:
-    branches: ['master']
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.4
-      - uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
-          restore-keys: ${{ runner.os }}-bun-
-      - run: bun install
-      - run: bun oxlint
-      - run: bun knip
-      - run: bun knip:production
   format:
-    name: Format
+    name: Format (bun fmt)
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
+      - uses: ./.github/actions/setup-bun
         with:
-          bun-version: 1.4.4
-      - uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
-          restore-keys: ${{ runner.os }}-bun-
-      - run: bun install
+          install: 'false'
       - run: bun fmt --check
+
+  lint:
+    name: Lint (oxlint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-bun
+      - run: bun oxlint
+
+  knip:
+    name: Dead code (knip)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-bun
+      - name: Dead code & exports
+        run: bun knip
+      - name: Production dependencies
+        run: bun knip:production
+
   typecheck:
-    name: Typecheck
+    name: Typecheck (bun check)
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.4
-      - uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
-          restore-keys: ${{ runner.os }}-bun-
-      - run: bun install
+      - uses: ./.github/actions/setup-bun
       - run: bun check
-  test_unit:
-    name: Test (unit)
+
+  test-core:
+    name: Tests · Core
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.4
-      - uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
-          restore-keys: ${{ runner.os }}-bun-
-      - run: bun install
-      - run: bun test config/checks shared/*.test.ts
-      - run: bun test --cwd server --max-concurrency 1 unit
-      - run: TZ=Europe/Paris bun test --cwd desktop
-      - run: bun test docs/scripts
-      - run: bun test cli/tests
-  server_e2e:
-    name: Server browser
+      - uses: ./.github/actions/setup-bun
+      - run: bun run test:core
+
+  test-server:
+    name: Tests · Server
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.4
-      - uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
-          restore-keys: ${{ runner.os }}-bun-
+      - uses: ./.github/actions/setup-bun
+      - name: Ensure ImageMagick
+        run: command -v magick >/dev/null || command -v convert >/dev/null || (sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick)
+      - run: bun run test:server
+
+  test-desktop:
+    name: Tests · Desktop
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-bun
+      - run: bun run test:desktop
+
+  test-e2e:
+    name: Tests · Server E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-bun
       - uses: browser-actions/setup-chrome@v1
         id: chrome
-      - run: bun install
-      - run: bun server:e2e
+      - name: Ensure ImageMagick
+        run: command -v magick >/dev/null || command -v convert >/dev/null || (sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick)
+      - run: bun run test:e2e
         env:
           BUN_CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
-  package:
-    name: Package
-    runs-on: macos-latest
+
+  build-binaries:
+    name: Build · Server & CLI
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.4
-      - uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
-          restore-keys: ${{ runner.os }}-bun-
-      - run: bun install
-      - run: bun desktop:build
-      - run: bun desktop:package
+      - uses: ./.github/actions/setup-bun
+      - name: Build & smoke server
+        run: bash server/utils/build-release.sh .
+      - name: Build & smoke CLI
+        run: |
+          bun build --compile --target=bun-linux-x64 --no-compile-autoload-dotenv \
+            cli/src/main.ts --outfile "$RUNNER_TEMP/pierre-cli"
+          test "$("$RUNNER_TEMP/pierre-cli" --version)" = "cli-$(jq -r .version cli/package.json)"
