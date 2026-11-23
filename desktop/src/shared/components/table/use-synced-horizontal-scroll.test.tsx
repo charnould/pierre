@@ -1,30 +1,6 @@
-import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
-
-import { JSDOM } from 'jsdom'
+import { describe, expect, test } from 'bun:test'
 
 import { useSyncedHorizontalScroll } from './use-synced-horizontal-scroll'
-
-const dom = new JSDOM('<!doctype html><html><body></body></html>')
-const savedWindow = globalThis.window
-const savedDocument = globalThis.document
-const savedHTMLElement = globalThis.HTMLElement
-
-beforeAll(() => {
-  Object.assign(globalThis, {
-    window: dom.window,
-    document: dom.window.document,
-    HTMLElement: dom.window.HTMLElement,
-    IS_REACT_ACT_ENVIRONMENT: true
-  })
-})
-
-afterAll(() => {
-  Object.assign(globalThis, {
-    window: savedWindow,
-    document: savedDocument,
-    HTMLElement: savedHTMLElement
-  })
-})
 
 function ScrollPair() {
   const { headerScrollRef, bodyScrollRef, onHeaderScroll, onBodyScroll } =
@@ -51,13 +27,13 @@ describe('useSyncedHorizontalScroll', () => {
 
     await act(async () => {
       header.scrollLeft = 120
-      header.dispatchEvent(new dom.window.Event('scroll', { bubbles: true }))
+      header.dispatchEvent(new window.Event('scroll', { bubbles: true }))
     })
     expect(body.scrollLeft).toBe(120)
 
     await act(async () => {
       body.scrollLeft = 48
-      body.dispatchEvent(new dom.window.Event('scroll', { bubbles: true }))
+      body.dispatchEvent(new window.Event('scroll', { bubbles: true }))
     })
     expect(header.scrollLeft).toBe(48)
 

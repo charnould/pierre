@@ -1,6 +1,4 @@
-import { beforeAll, describe, expect, it } from 'bun:test'
-
-import { JSDOM } from 'jsdom'
+import { describe, expect, it } from 'bun:test'
 
 import { parseProseMarkdown, renderProseMarkdownHtml } from './parse-prose-markdown'
 
@@ -8,13 +6,6 @@ const TABLE_MD = `| A | B |
 |---|---|
 | 1 | 2 |
 `
-
-beforeAll(() => {
-  const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>')
-  globalThis.document = dom.window.document
-  globalThis.window = dom.window as unknown as Window & typeof globalThis
-  globalThis.HTMLElement = dom.window.HTMLElement
-})
 
 describe('parseProseMarkdown', () => {
   it('renders semantic html without streamdown wrappers', () => {

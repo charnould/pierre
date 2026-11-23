@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, mock, test } from 'bun:test'
 
-import { JSDOM } from 'jsdom'
-
 import type { BulkReportDetail, BulkReportItem, PreviewRow } from '@/shared/types/bulk-operations'
+
+let realRepaymentInspector: Record<string, unknown>
 
 function previewRow(route: PreviewRow['route']): PreviewRow {
   return {
@@ -20,10 +20,6 @@ function previewRow(route: PreviewRow['route']): PreviewRow {
     skippedSteps: []
   }
 }
-
-mock.module('@/features/repayment/components/RepaymentInspector', () => ({
-  RepaymentInspector: () => null
-}))
 
 const item = (overrides: Partial<BulkReportItem> = {}): BulkReportItem => ({
   id: 'job-1',
@@ -73,35 +69,18 @@ const detail = (overrides: Partial<BulkReportDetail> = {}): BulkReportDetail => 
   ...overrides
 })
 
-const dom = new JSDOM('<!doctype html><html><body></body></html>')
-const savedWindow = globalThis.window
-const savedDocument = globalThis.document
-const savedHTMLElement = globalThis.HTMLElement
-const savedResizeObserver = globalThis.ResizeObserver
-
-beforeAll(() => {
-  Object.assign(globalThis, {
-    window: dom.window,
-    document: dom.window.document,
-    HTMLElement: dom.window.HTMLElement,
-    IS_REACT_ACT_ENVIRONMENT: true,
-    ResizeObserver:
-      savedResizeObserver ??
-      class {
-        observe() {}
-        unobserve() {}
-        disconnect() {}
-      }
-  })
+beforeAll(async () => {
+  realRepaymentInspector = {
+    ...(await import('@/features/repayment/components/RepaymentInspector'))
+  }
+  mock.module('@/features/repayment/components/RepaymentInspector', () => ({
+    ...realRepaymentInspector,
+    RepaymentInspector: () => null
+  }))
 })
 
 afterAll(() => {
-  Object.assign(globalThis, {
-    window: savedWindow,
-    document: savedDocument,
-    HTMLElement: savedHTMLElement,
-    ResizeObserver: savedResizeObserver
-  })
+  mock.module('@/features/repayment/components/RepaymentInspector', () => realRepaymentInspector)
 })
 
 describe('lignes du détail de rapport', () => {

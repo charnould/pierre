@@ -113,10 +113,13 @@ function applyDom() {
   globals.IS_REACT_ACT_ENVIRONMENT = true
 }
 
-function ensureWindow() {
-  if (typeof globalThis.window === 'undefined' || globalThis.window == null) applyDom()
+function ensureDom() {
+  applyDom()
 }
 
 applyDom()
-afterEach(ensureWindow)
-afterAll(ensureWindow)
+afterEach(ensureDom)
+afterAll(() => {
+  applyDom()
+  dom.window.document.body.replaceChildren()
+})

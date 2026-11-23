@@ -1,15 +1,6 @@
-import { describe, expect, it, mock } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 
 import { renderToStaticMarkup } from 'react-dom/server'
-
-mock.module('@/contexts/UiSettingsContext', () => ({
-  useUiSettings: () => ({
-    settings: { mascot: { shape: 'galet', color: '#5b8c5a' } }
-  }),
-  useResolvedUiSettings: () => ({
-    mascot: { shape: 'galet', color: '#5b8c5a' }
-  })
-}))
 
 import { ContextTimeline } from '@/shared/components/timeline/context-timeline'
 import { parseActivityAuthor } from '@/shared/lib/timeline/parse-activity-author'

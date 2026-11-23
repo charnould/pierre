@@ -1,6 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
-
-import { JSDOM } from 'jsdom'
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 
 import { BulkOperationsList } from '@/features/bulk/components/BulkOperationsList'
 import {
@@ -8,38 +6,17 @@ import {
   emptyBulkOperationDefinition
 } from '@/shared/types/bulk-operations'
 
-const dom = new JSDOM('<!doctype html><html><body></body></html>')
-const DOM_KEYS = [
-  'window',
-  'document',
-  'HTMLElement',
-  'Element',
-  'Node',
-  'Event',
-  'MouseEvent',
-  'MutationObserver'
-] as const
-const savedGlobals = new Map<string, unknown>()
+let previousApi: typeof window.api
 
-beforeAll(() => {
-  const globals = globalThis as Record<string, unknown>
-  const win = dom.window as unknown as Record<string, unknown>
-  for (const key of DOM_KEYS) {
-    savedGlobals.set(key, globals[key])
-    globals[key] = key === 'document' ? dom.window.document : win[key]
-  }
-  ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+beforeEach(() => {
+  previousApi = window.api
   window.api = {
     getUsers: async () => ({ data: [] })
   } as unknown as typeof window.api
 })
 
-afterAll(() => {
-  const globals = globalThis as Record<string, unknown>
-  for (const [key, value] of savedGlobals) {
-    if (value === undefined) delete globals[key]
-    else globals[key] = value
-  }
+afterEach(() => {
+  window.api = previousApi
 })
 
 describe('navigation depuis la liste des traitements', () => {

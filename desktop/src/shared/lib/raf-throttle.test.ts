@@ -4,9 +4,13 @@ import { createRafThrottle } from './raf-throttle'
 
 describe('createRafThrottle', () => {
   let rafCallbacks: Array<FrameRequestCallback> = []
+  let originalRaf: typeof globalThis.requestAnimationFrame | undefined
+  let originalCaf: typeof globalThis.cancelAnimationFrame | undefined
 
   beforeEach(() => {
     rafCallbacks = []
+    originalRaf = globalThis.requestAnimationFrame
+    originalCaf = globalThis.cancelAnimationFrame
     globalThis.requestAnimationFrame = (cb) => {
       rafCallbacks.push(cb)
       return rafCallbacks.length
@@ -17,10 +21,14 @@ describe('createRafThrottle', () => {
   })
 
   afterEach(() => {
-    delete (globalThis as { requestAnimationFrame?: typeof requestAnimationFrame })
-      .requestAnimationFrame
-    delete (globalThis as { cancelAnimationFrame?: typeof cancelAnimationFrame })
-      .cancelAnimationFrame
+    if (originalRaf) globalThis.requestAnimationFrame = originalRaf
+    else
+      delete (globalThis as { requestAnimationFrame?: typeof requestAnimationFrame })
+        .requestAnimationFrame
+    if (originalCaf) globalThis.cancelAnimationFrame = originalCaf
+    else
+      delete (globalThis as { cancelAnimationFrame?: typeof cancelAnimationFrame })
+        .cancelAnimationFrame
   })
 
   test('flushNow cancels a pending frame so flush runs once', () => {

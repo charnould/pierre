@@ -2,26 +2,11 @@ import { afterAll, beforeAll, describe, expect, mock, test } from 'bun:test'
 
 import { loadCustomizationFixture } from '@test/instance-customization-fixture'
 import { JSDOM } from 'jsdom'
-import { type ReactNode } from 'react'
 
+import { NavigationHistoryProvider } from '@/contexts/NavigationHistoryContext'
 import type { ReaderTarget } from '@/features/activity/lib/reader-target'
 import { resetCustomization } from '@/shared/lib/instance-customization'
 import type { ActivityListItem, ActivityType } from '@/shared/types/activities'
-
-mock.module('@/contexts/NavigationHistoryContext', () => ({
-  NavigationHistoryProvider: ({ children }: { children: ReactNode }) => children,
-  useNavigationHistory: () => ({ navigate: mock(() => {}) }),
-  useRegisterNavigationHandlers: () => {}
-}))
-
-mock.module('@/contexts/UiSettingsContext', () => ({
-  useUiSettings: () => ({
-    settings: { mascot: { shape: 'galet', color: '#5b8c5a' } }
-  }),
-  useResolvedUiSettings: () => ({
-    mascot: { shape: 'galet', color: '#5b8c5a' }
-  })
-}))
 
 function openableRows(): HTMLElement[] {
   return [...document.querySelectorAll<HTMLElement>('li')].filter(
@@ -284,11 +269,13 @@ async function renderPanel(
   const root = createRoot(container)
   await act(async () => {
     root.render(
-      <ActivityRailProvider>
-        <OpenPanel />
-        <Probe />
-        <PanelWithReadToggle />
-      </ActivityRailProvider>
+      <NavigationHistoryProvider activeTab="home" onTabChange={() => {}}>
+        <ActivityRailProvider>
+          <OpenPanel />
+          <Probe />
+          <PanelWithReadToggle />
+        </ActivityRailProvider>
+      </NavigationHistoryProvider>
     )
     await new Promise((resolve) => window.setTimeout(resolve, 50))
   })

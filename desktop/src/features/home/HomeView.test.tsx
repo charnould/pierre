@@ -14,15 +14,18 @@ const resolvedUiSettings: {
   home?: { mine?: number }
 } = { mascot: { shape: 'galet', color: '#5b8c5a' } }
 
-mock.module('@/contexts/UiSettingsContext', () => ({
-  useUiSettings: () => ({ settings: resolvedUiSettings }),
-  useResolvedUiSettings: () => resolvedUiSettings
-}))
+let realUiSettingsContext: Record<string, unknown>
 
 let installedDom = false
 const originalGlobals = new Map<string, unknown>()
 
-beforeAll(() => {
+beforeAll(async () => {
+  realUiSettingsContext = { ...(await import('@/contexts/UiSettingsContext')) }
+  mock.module('@/contexts/UiSettingsContext', () => ({
+    ...realUiSettingsContext,
+    useUiSettings: () => ({ settings: resolvedUiSettings }),
+    useResolvedUiSettings: () => resolvedUiSettings
+  }))
   const globals = globalThis as Record<string, unknown>
   const existingWindow = globals.window as { setTimeout?: unknown; Element?: unknown } | undefined
   const hasWorkingDom =
@@ -81,6 +84,7 @@ beforeAll(() => {
 })
 
 afterAll(() => {
+  mock.module('@/contexts/UiSettingsContext', () => realUiSettingsContext)
   if (!installedDom) return
   const globals = globalThis as Record<string, unknown>
   for (const [key, value] of originalGlobals) {
