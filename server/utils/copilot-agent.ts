@@ -12,7 +12,7 @@
  */
 
 import { Database } from 'bun:sqlite'
-import { existsSync, mkdirSync } from 'node:fs'
+import { existsSync, mkdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
 import {
@@ -77,6 +77,22 @@ const locks = new Map<string, Promise<void>>()
 const AUTOMATION_PROMPT_SLOT = '{{automation-prompt}}'
 const KNOWLEDGE_SCHEMA_SLOT = '{{knowledge-schema}}'
 
+const readmeCache = new Map<string, { mtimeMs: number; size: number; content: string }>()
+
+function readKnowledgeReadme(dbPath: string): string {
+  if (!existsSync(dbPath)) return ''
+  const stat = statSync(dbPath)
+  const cached = readmeCache.get(dbPath)
+  if (cached && cached.mtimeMs === stat.mtimeMs && cached.size === stat.size) {
+    return cached.content
+  }
+  using db = new Database(dbPath, { readonly: true })
+  const row = db.query<{ content: string }, []>('SELECT content FROM _readme').get()
+  const content = row?.content?.trim() ?? ''
+  readmeCache.set(dbPath, { mtimeMs: stat.mtimeMs, size: stat.size, content })
+  return content
+}
+
 /** Replaces the slot. Does not insert the slot when the consigne has none. */
 export function insertAutomationPrompt(markdown: string, prompt: string | undefined): string {
   if (prompt === undefined || !markdown.includes(AUTOMATION_PROMPT_SLOT)) return markdown
@@ -102,11 +118,12 @@ export async function buildConversationAgentsFile(
   ).trim()
 
   if (raw) {
-    if (raw.includes(KNOWLEDGE_SCHEMA_SLOT) && (await Bun.file(dbPath).exists())) {
+    if (raw.includes(KNOWLEDGE_SCHEMA_SLOT)) {
       try {
-        using db = new Database(dbPath, { readonly: true })
-        const row = db.query<{ content: string }, []>('SELECT content FROM _readme').get()
-        raw = raw.replace(KNOWLEDGE_SCHEMA_SLOT, () => row?.content?.trim() ?? '')
+        const schema = readKnowledgeReadme(dbPath)
+        if (schema || existsSync(dbPath)) {
+          raw = raw.replace(KNOWLEDGE_SCHEMA_SLOT, () => schema)
+        }
       } catch (err) {
         console.warn('[AGENT] Could not read db schema:', err)
       }
@@ -316,6 +333,16 @@ export function piEventToCopilotChunks(event: Record<string, unknown>): CopilotC
   return []
 }
 
+const EMPTY_SESSION_COUNTERS: SessionCounters = {
+  input: 0,
+  output: 0,
+  cacheRead: 0,
+  cacheWrite: 0,
+  total: 0,
+  cost: 0,
+  contextUsage: null
+}
+
 /**
  * Stream a response from Pi as incremental chunks.
  *
@@ -399,8 +426,9 @@ export async function* streamCopilot(
     // Step 1 — Get (or create) the VM and Pi RPC client for this conversation
     console.log(`[AGENT] Step 1/2 — Getting VM...`)
     const t1 = Date.now()
+    const hadVm = hasVm(convId)
     // Refresh AGENTS.md with the current date/time before creating a new VM
-    if (!hasVm(convId)) {
+    if (!hadVm) {
       await buildConversationAgentsFile(
         convId,
         configId,
@@ -416,11 +444,14 @@ export async function* streamCopilot(
     if (signal?.aborted) throw new DOMException('Request aborted', 'AbortError')
     console.log(`[AGENT] Step 1/2 — VM ready (${Date.now() - t1}ms)`)
 
-    // Set reasoning effort before sending the prompt
-    try {
-      await client.sendCommand({ type: 'set_thinking_level', level: reasoningEffort }, 3_000)
-    } catch {
-      // Non-fatal: some providers/models ignore thinking level
+    // Only change reasoning effort when it differs from the level Pi already runs with
+    if (acquired.thinkingLevel !== reasoningEffort) {
+      try {
+        await client.sendCommand({ type: 'set_thinking_level', level: reasoningEffort }, 3_000)
+        acquired.thinkingLevel = reasoningEffort
+      } catch {
+        // Non-fatal: some providers/models ignore thinking level
+      }
     }
 
     // Queue to bridge event callbacks → async generator
@@ -749,14 +780,18 @@ export async function* streamCopilot(
     // Safety timeout counts generation time only; it is paused during native Pi UI input.
     armGenerationTimeout()
 
-    try {
-      const initial = await client.sendCommand<Record<string, unknown>>(
-        { type: 'get_session_stats' },
-        10_000
-      )
-      before = parseSessionCounters(initial['data'])
-    } catch (err) {
-      console.warn('[AGENT] Failed to fetch initial stats:', err)
+    if (!hadVm) {
+      before = EMPTY_SESSION_COUNTERS
+    } else {
+      try {
+        const initial = await client.sendCommand<Record<string, unknown>>(
+          { type: 'get_session_stats' },
+          10_000
+        )
+        before = parseSessionCounters(initial['data'])
+      } catch (err) {
+        console.warn('[AGENT] Failed to fetch initial stats:', err)
+      }
     }
 
     // Step 2 — Send prompt (Pi acks immediately, then streams events)
