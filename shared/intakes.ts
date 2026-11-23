@@ -1,5 +1,8 @@
 import { DATASTORE_TABLES } from './core-data'
 import { normalize_knowledge_name } from './knowledge'
+import type { IntakeNotificationSchedule } from './schedule'
+
+export type { IntakeNotificationSchedule }
 
 export const INTAKE_MAX_FIELDS = 50
 export const INTAKE_SHORT_TEXT_MAX = 500
@@ -123,9 +126,6 @@ export type IntakeField =
 
 export type IntakeInputField = Exclude<IntakeField, IntakeSectionField>
 
-export type IntakeNotificationsConfig =
-  { mode: 'none' } | { mode: 'immediate' } | { mode: 'hourly' } | { mode: 'daily'; hour: number }
-
 export type IntakeConfig = {
   form: {
     title: string
@@ -136,7 +136,7 @@ export type IntakeConfig = {
   access: {
     passwords: string[]
   }
-  notifications: IntakeNotificationsConfig
+  notifications: IntakeNotificationSchedule
 }
 
 export type IntakeStatus = 'draft' | 'published' | 'closed'
@@ -156,6 +156,7 @@ export type IntakeRecord = {
   publishedAt: string | null
   closedAt: string | null
   lastNotifiedAt: string | null
+  nextNotifyAt: string | null
   submissionCount: number
   lastSubmissionAt: string | null
   /** Column names locked in `intake_{table_name}` after publication (including removed fields). */
