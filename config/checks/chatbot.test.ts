@@ -1,10 +1,6 @@
 import { expect, test } from 'bun:test'
 
-import {
-  chatbotSiteFields,
-  DefaultChatbotConfig,
-  InternalChatbotConfig
-} from '../../server/utils/_schema'
+import { ChatbotConfig, chatbotSiteFields } from '../../server/utils/_schema'
 
 const shared = {
   display: 'X',
@@ -16,18 +12,10 @@ const shared = {
   disclaimer: 'Vérifier.'
 }
 
-test('default schema has no enabled switch', () => {
-  expect(DefaultChatbotConfig.safeParse({ id: 'default', ...shared }).success).toBe(true)
-  expect(DefaultChatbotConfig.safeParse({ id: 'default', ...shared, enabled: true }).success).toBe(
-    false
-  )
-})
-
-test('internal schema rejects public-only fields', () => {
-  expect(InternalChatbotConfig.safeParse({ id: 'interne', ...shared }).success).toBe(true)
-  expect(InternalChatbotConfig.safeParse({ id: 'interne', ...shared, enabled: true }).success).toBe(
-    false
-  )
+test('chatbot schema accepts valid configs and rejects unknown fields', () => {
+  expect(ChatbotConfig.safeParse({ id: 'default', ...shared }).success).toBe(true)
+  expect(ChatbotConfig.safeParse({ id: 'interne', ...shared }).success).toBe(true)
+  expect(ChatbotConfig.safeParse({ id: 'default', ...shared, enabled: true }).success).toBe(false)
 })
 
 test('chatbotSiteFields hides blank chrome', () => {
