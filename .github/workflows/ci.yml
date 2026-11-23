@@ -94,13 +94,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-bun
-      - uses: browser-actions/setup-chrome@v1
-        id: chrome
       - name: Ensure ImageMagick
         run: command -v magick >/dev/null || command -v convert >/dev/null || (sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick)
       - run: bun run test:e2e
-        env:
-          BUN_CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
 
   build-binaries:
     name: Build · Server & CLI
