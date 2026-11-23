@@ -60,7 +60,7 @@ Cette palette est celle du marketing. L’application desktop conserve ses token
 - **Geist Mono** pour les littéraux techniques, dont le numéro de version.
 - Pas de Geist Serif.
 
-Les tailles sont fixes : les plus grandes qui tiennent sur leur ligne. Pas de script qui mesure les glyphes. Les fontes sont dans [`desktop/src/assets/fonts`](../desktop/src/assets/fonts). Le wordmark reprend `.article h1` de [`docs/scripts/site.css`](../docs/scripts/site.css).
+Les tailles sont fixes : les plus grandes qui tiennent sur leur ligne. Pas de script qui mesure les glyphes. Les fontes sont dans [`desktop/src/assets/fonts`](../desktop/src/assets/fonts). Le wordmark reprend `.article h1` de [`docs/scripts/build.ts`](../docs/scripts/build.ts).
 
 ### Blocs
 
@@ -111,6 +111,6 @@ si Bun ne détecte pas automatiquement le navigateur.
 - CARL : [`docs/src/03-core-models-hlm/CARL.md`](../docs/src/03-core-models-hlm/CARL.md) ;
 - droits d’usage : [`LICENSE.md`](../LICENSE.md) ;
 - design du produit : [`desktop/DESIGN.md`](../desktop/DESIGN.md) ;
-- wordmark : [`docs/scripts/site.css`](../docs/scripts/site.css).
+- wordmark : [`docs/scripts/build.ts`](../docs/scripts/build.ts).
 
 Les images situées dans `docs/src/04-core-intelligence-hlm/Paramétrages de PIERRE/` sont des exemples de personnalisation d’un bailleur, pas l’identité de PIERRE.
