@@ -26,6 +26,6 @@ cannot find the executable automatically.
 
 ## Verification
 
-Run commands from the repository root. Use targeted tests while iterating, then run `bun check`, `bun test --cwd server --max-concurrency 1 unit`, `bun fmt --check`,
+Run commands from the repository root. Use targeted tests while iterating, then run `bun check`, `bun run test:server`, `bun fmt --check`,
 `bun oxlint`, `bun knip`, `bun knip:production`,
-and `bun server:e2e` for browser flows. `bun test` does not start the server or seed the datastore; `server/tests/e2e/run.ts` does, then runs `bun test tests/e2e`.
+and `bun run test:e2e` for browser flows. `bun test` does not start the server or seed the datastore; `server/tests/e2e/run.ts` does, then runs `bun test tests/e2e`.
