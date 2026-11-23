@@ -8,24 +8,8 @@ import { resetCustomization } from '@/shared/lib/instance-customization'
 import type { ChatBoot } from '@/shared/types'
 
 const releases: Array<{ url: string; convId: string }> = []
-
-mock.module('@/features/chat/ChatPanel', () => ({
-  ChatPanel: forwardRef(function MockChatPanel(_props, ref) {
-    useImperativeHandle(ref, () => ({
-      focus: () => {},
-      stop: () => {},
-      clearMessages: () => {},
-      resetAfterAbortedStop: () => {}
-    }))
-    return <div data-testid="chat-panel" />
-  })
-}))
-
-mock.module('@/shared/lib/release-conversation-vm', () => ({
-  releaseConversationVm: (url: string, convId: string) => {
-    releases.push({ url, convId })
-  }
-}))
+let realChatPanel: Record<string, unknown>
+let realReleaseConversationVm: Record<string, unknown>
 
 const boot: ChatBoot = {
   convId: '00000000-0000-4000-8000-000000000001',
@@ -43,7 +27,27 @@ const boot: ChatBoot = {
 let installedDom = false
 const originalGlobals = new Map<string, unknown>()
 
-beforeAll(() => {
+beforeAll(async () => {
+  realChatPanel = { ...(await import('@/features/chat/ChatPanel')) }
+  realReleaseConversationVm = { ...(await import('@/shared/lib/release-conversation-vm')) }
+  mock.module('@/features/chat/ChatPanel', () => ({
+    ...realChatPanel,
+    ChatPanel: forwardRef(function MockChatPanel(_props, ref) {
+      useImperativeHandle(ref, () => ({
+        focus: () => {},
+        stop: () => {},
+        clearMessages: () => {},
+        resetAfterAbortedStop: () => {}
+      }))
+      return <div data-testid="chat-panel" />
+    })
+  }))
+  mock.module('@/shared/lib/release-conversation-vm', () => ({
+    ...realReleaseConversationVm,
+    releaseConversationVm: (url: string, convId: string) => {
+      releases.push({ url, convId })
+    }
+  }))
   const globals = globalThis as Record<string, unknown>
   if (typeof globals.document === 'undefined') {
     const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
@@ -85,6 +89,8 @@ beforeAll(() => {
 })
 
 afterAll(() => {
+  mock.module('@/features/chat/ChatPanel', () => realChatPanel)
+  mock.module('@/shared/lib/release-conversation-vm', () => realReleaseConversationVm)
   if (!installedDom) return
   const globals = globalThis as Record<string, unknown>
   for (const [key, value] of originalGlobals) {

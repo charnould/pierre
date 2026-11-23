@@ -1,36 +1,6 @@
-import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
-
-import { JSDOM } from 'jsdom'
+import { describe, expect, test } from 'bun:test'
 
 import { BulkTemplateField } from './BulkTemplateField'
-
-const dom = new JSDOM('<!doctype html><html><body></body></html>')
-const saved = {
-  window: globalThis.window,
-  document: globalThis.document,
-  Node: globalThis.Node,
-  Element: globalThis.Element,
-  HTMLElement: globalThis.HTMLElement,
-  HTMLDivElement: globalThis.HTMLDivElement,
-  HTMLBRElement: globalThis.HTMLBRElement,
-  MutationObserver: globalThis.MutationObserver
-}
-
-beforeAll(() => {
-  Object.assign(globalThis, {
-    window: dom.window,
-    document: dom.window.document,
-    Node: dom.window.Node,
-    Element: dom.window.Element,
-    HTMLElement: dom.window.HTMLElement,
-    HTMLDivElement: dom.window.HTMLDivElement,
-    HTMLBRElement: dom.window.HTMLBRElement,
-    MutationObserver: dom.window.MutationObserver,
-    IS_REACT_ACT_ENVIRONMENT: true
-  })
-})
-
-afterAll(() => Object.assign(globalThis, saved))
 
 describe('BulkTemplateField', () => {
   test('affiche les placeholders stockés comme des jetons slash', async () => {

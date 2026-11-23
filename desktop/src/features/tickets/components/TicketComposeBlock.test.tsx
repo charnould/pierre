@@ -4,17 +4,10 @@ import { empty_rcs_compose } from '@pierre/shared/rcs-message'
 import { loadCustomizationFixture } from '@test/instance-customization-fixture'
 import { JSDOM } from 'jsdom'
 
+import { UiSettingsProvider } from '@/contexts/UiSettingsContext'
+
 import type { TicketComposeMode } from '../lib/use-tickets-view-data'
 import type { TicketAiGenerationProps } from './TicketComposeBlock'
-
-mock.module('@/contexts/UiSettingsContext', () => ({
-  useUiSettings: () => ({
-    settings: { tickets: { table: { columnValues: {} } } }
-  }),
-  useResolvedUiSettings: () => ({
-    tickets: { table: { columnValues: {} } }
-  })
-}))
 
 let installedDom = false
 const originalGlobals = new Map<string, unknown>()
@@ -206,9 +199,11 @@ async function renderCompose(
 
   await act(async () => {
     root.render(
-      <AgentIdentityProvider name="Gustave">
-        <Harness />
-      </AgentIdentityProvider>
+      <UiSettingsProvider>
+        <AgentIdentityProvider name="Gustave">
+          <Harness />
+        </AgentIdentityProvider>
+      </UiSettingsProvider>
     )
   })
 
@@ -242,7 +237,9 @@ describe('TicketComposeBlock', () => {
     const root = createRoot(container)
     await act(async () => {
       root.render(
-        <TicketSummaryCard ticket={{ id_reclamation: 'REC-1', message_initial: message }} />
+        <UiSettingsProvider>
+          <TicketSummaryCard ticket={{ id_reclamation: 'REC-1', message_initial: message }} />
+        </UiSettingsProvider>
       )
     })
     try {
@@ -264,15 +261,17 @@ describe('TicketComposeBlock', () => {
     const root = createRoot(container)
     await act(async () => {
       root.render(
-        <TicketSummaryCard
-          ticket={{
-            id_reclamation: 'REC-1',
-            qualification_hierarchie: 'technique > plomberie > fuite_de_lavabo',
-            motif: 'Fuite',
-            email_collaborateur_en_charge: 'alice@bailleur.fr'
-          }}
-          referent={null}
-        />
+        <UiSettingsProvider>
+          <TicketSummaryCard
+            ticket={{
+              id_reclamation: 'REC-1',
+              qualification_hierarchie: 'technique > plomberie > fuite_de_lavabo',
+              motif: 'Fuite',
+              email_collaborateur_en_charge: 'alice@bailleur.fr'
+            }}
+            referent={null}
+          />
+        </UiSettingsProvider>
       )
     })
     try {
@@ -294,20 +293,22 @@ describe('TicketComposeBlock', () => {
     const root = createRoot(container)
     await act(async () => {
       root.render(
-        <TicketSummaryCard
-          ticket={{
-            id_reclamation: 'REC-1',
-            id_locataire: 'LOC-1',
-            id_lot: 'LOT-9',
-            id_site: 'SITE-2',
-            cree_le: '2026-06-01',
-            canal_contact: 'courriel',
-            motif: 'Fuite',
-            statut: 'ouvert',
-            etat_de_la_reclamation: 'en instruction',
-            avancement: 'en cours'
-          }}
-        />
+        <UiSettingsProvider>
+          <TicketSummaryCard
+            ticket={{
+              id_reclamation: 'REC-1',
+              id_locataire: 'LOC-1',
+              id_lot: 'LOT-9',
+              id_site: 'SITE-2',
+              cree_le: '2026-06-01',
+              canal_contact: 'courriel',
+              motif: 'Fuite',
+              statut: 'ouvert',
+              etat_de_la_reclamation: 'en instruction',
+              avancement: 'en cours'
+            }}
+          />
+        </UiSettingsProvider>
       )
     })
     try {
@@ -329,7 +330,7 @@ describe('TicketComposeBlock', () => {
       expect(container.textContent).toContain('LOT-9')
       expect(container.textContent).toContain('SITE-2')
       expect(container.textContent).toContain('en instruction')
-      expect(container.textContent).toContain('en cours')
+      expect(container.textContent).toContain('En cours')
     } finally {
       await act(async () => root.unmount())
       container.remove()

@@ -8,19 +8,21 @@ import type { TimelineActorKind } from '@/shared/lib/timeline/parse-activity-aut
 
 const MASCOT_COLOR = '#5b8c5a' as const
 
-mock.module('@/contexts/UiSettingsContext', () => ({
-  useUiSettings: () => ({
-    settings: { mascot: { shape: 'galet', color: MASCOT_COLOR } }
-  }),
-  useResolvedUiSettings: () => ({
-    mascot: { shape: 'galet', color: MASCOT_COLOR }
-  })
-}))
-
+let realUiSettingsContext: Record<string, unknown>
 let installedDom = false
 const originalGlobals = new Map<string, unknown>()
 
-beforeAll(() => {
+beforeAll(async () => {
+  realUiSettingsContext = { ...(await import('@/contexts/UiSettingsContext')) }
+  mock.module('@/contexts/UiSettingsContext', () => ({
+    ...realUiSettingsContext,
+    useUiSettings: () => ({
+      settings: { mascot: { shape: 'galet', color: MASCOT_COLOR } }
+    }),
+    useResolvedUiSettings: () => ({
+      mascot: { shape: 'galet', color: MASCOT_COLOR }
+    })
+  }))
   const globals = globalThis as Record<string, unknown>
   const existingWindow = globals.window as { setTimeout?: unknown; Element?: unknown } | undefined
   const hasWorkingDom =
@@ -63,6 +65,7 @@ beforeAll(() => {
 })
 
 afterAll(() => {
+  mock.module('@/contexts/UiSettingsContext', () => realUiSettingsContext)
   if (!installedDom) return
   const globals = globalThis as Record<string, unknown>
   for (const [key, value] of originalGlobals) {

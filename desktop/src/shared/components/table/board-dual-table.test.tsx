@@ -1,7 +1,6 @@
-import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
+import { describe, expect, test } from 'bun:test'
 
 import { type SortingState, useTable } from '@tanstack/react-table'
-import { JSDOM } from 'jsdom'
 import { useState } from 'react'
 
 import {
@@ -15,43 +14,6 @@ import { BoardTableDataRow } from './board-table-data-row'
 import { type AnyPierreColumn, ColumnHeaderOptionsTrigger } from './column-header-options-menu'
 import { DataColumnHeader } from './DataColumnHeader'
 import { pierreTableFeatures } from './table-features'
-
-const dom = new JSDOM('<!doctype html><html><body></body></html>')
-const saved = {
-  window: globalThis.window,
-  document: globalThis.document,
-  HTMLElement: globalThis.HTMLElement,
-  Element: globalThis.Element,
-  Node: globalThis.Node,
-  ResizeObserver: globalThis.ResizeObserver,
-  requestAnimationFrame: globalThis.requestAnimationFrame,
-  cancelAnimationFrame: globalThis.cancelAnimationFrame,
-  getComputedStyle: globalThis.getComputedStyle
-}
-
-beforeAll(() => {
-  Object.assign(globalThis, {
-    window: dom.window,
-    document: dom.window.document,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    getComputedStyle: dom.window.getComputedStyle,
-    requestAnimationFrame: (callback: FrameRequestCallback) =>
-      dom.window.setTimeout(() => callback(0), 0),
-    cancelAnimationFrame: (id: number) => dom.window.clearTimeout(id),
-    ResizeObserver: class {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
-    },
-    IS_REACT_ACT_ENVIRONMENT: true
-  })
-})
-
-afterAll(() => {
-  Object.assign(globalThis, saved)
-})
 
 function BoardHarness({
   onActivate,
@@ -156,7 +118,7 @@ describe('BoardDualTable', () => {
     const sortButton = container.querySelector<HTMLButtonElement>('[aria-label="Trier Nom"]')
     expect(sortButton).not.toBeNull()
     await act(async () => {
-      sortButton?.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }))
+      sortButton?.dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
     })
     expect(
       container.querySelector('[aria-label="Tri croissant de Nom. Passer au tri décroissant"]')
@@ -166,7 +128,7 @@ describe('BoardDualTable', () => {
         .querySelector<HTMLButtonElement>(
           '[aria-label="Tri croissant de Nom. Passer au tri décroissant"]'
         )
-        ?.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }))
+        ?.dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
     })
     expect(
       container.querySelector('[aria-label="Tri décroissant de Nom. Retirer le tri"]')
@@ -174,17 +136,15 @@ describe('BoardDualTable', () => {
     await act(async () => {
       container
         .querySelector<HTMLButtonElement>('[aria-label="Tri décroissant de Nom. Retirer le tri"]')
-        ?.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }))
+        ?.dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
     })
     expect(container.querySelector('[aria-label="Trier Nom"]')).not.toBeNull()
 
     const optionsButton = container.querySelector<HTMLButtonElement>('[aria-label="Options Nom"]')
     expect(optionsButton).not.toBeNull()
     await act(async () => {
-      optionsButton?.dispatchEvent(
-        new dom.window.MouseEvent('mousedown', { bubbles: true, button: 0 })
-      )
-      await new Promise((resolve) => dom.window.setTimeout(resolve, 50))
+      optionsButton?.dispatchEvent(new window.MouseEvent('mousedown', { bubbles: true, button: 0 }))
+      await new Promise((resolve) => window.setTimeout(resolve, 50))
     })
     expect(optionsButton?.getAttribute('aria-expanded')).toBe('true')
     expect(document.querySelector('[data-slot="dropdown-menu-content"]')?.textContent).toContain(
@@ -204,7 +164,7 @@ describe('BoardDualTable', () => {
     )
     expect(row?.getAttribute('aria-selected')).toBe('true')
     await act(async () => {
-      row?.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+      row?.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
     })
     expect(activated).toEqual(['Ada'])
 

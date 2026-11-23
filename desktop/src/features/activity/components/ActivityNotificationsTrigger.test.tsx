@@ -1,15 +1,17 @@
 import { afterAll, beforeAll, describe, expect, mock, test } from 'bun:test'
 
-mock.module('@/contexts/UiSettingsContext', () => ({
-  useResolvedUiSettings: () => ({ mascot: { badgeColor: '#ff6a45' } })
-}))
-
 import { JSDOM } from 'jsdom'
 
+let realUiSettingsContext: Record<string, unknown>
 let installedDom = false
 const originalGlobals = new Map<string, unknown>()
 
-beforeAll(() => {
+beforeAll(async () => {
+  realUiSettingsContext = { ...(await import('@/contexts/UiSettingsContext')) }
+  mock.module('@/contexts/UiSettingsContext', () => ({
+    ...realUiSettingsContext,
+    useResolvedUiSettings: () => ({ mascot: { badgeColor: '#ff6a45' } })
+  }))
   const globals = globalThis as Record<string, unknown>
   const existingWindow = globals.window as { setTimeout?: unknown; Element?: unknown } | undefined
   const hasWorkingDom =
@@ -68,6 +70,7 @@ beforeAll(() => {
 })
 
 afterAll(() => {
+  mock.module('@/contexts/UiSettingsContext', () => realUiSettingsContext)
   if (!installedDom) return
   const globals = globalThis as Record<string, unknown>
   for (const [key, value] of originalGlobals) {
