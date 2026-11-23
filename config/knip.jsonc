@@ -80,7 +80,6 @@
         "assets/embed/pierre-embed.ts!",
         "assets/host/pierre.ts!",
         "microvm/update.ts!",
-        "microvm/guest/extensions/ask-user.ts!",
         "utils/knowledge/scrape-wikipedia.ts!",
         "utils/update-pierre.ts!",
         "utils/ensure-carl.ts!",
