@@ -76,9 +76,9 @@ describe('workflow-payload', () => {
   })
 
   it('injects the workflow payload once, through the marker or after the prompt', () => {
-    expect(
-      injectWorkflowPayload('Mission\n<!-- WORKFLOW_PAYLOAD_HERE -->', { id_locataire: 'LOC-1' })
-    ).toBe('Mission\n{\n  "id_locataire": "LOC-1"\n}')
+    expect(injectWorkflowPayload('Mission\n{{workflow-payload}}', { id_locataire: 'LOC-1' })).toBe(
+      'Mission\n{\n  "id_locataire": "LOC-1"\n}'
+    )
     expect(injectWorkflowPayload('Mission', { id_locataire: 'LOC-1', context: '' })).toBe(
       'Mission\n\n{\n  "id_locataire": "LOC-1"\n}'
     )

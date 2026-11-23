@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 const ID_KEYS = ['id_client', 'id_locataire', 'id_lot', 'id_batiment'] as const
-const WORKFLOW_PAYLOAD_MARKER = '<!-- WORKFLOW_PAYLOAD_HERE -->'
+const WORKFLOW_PAYLOAD_MARKER = '{{workflow-payload}}'
 
 const AboutWorkflowPayloadSchema = z
   .object({
