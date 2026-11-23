@@ -105,10 +105,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-bun
+        with:
+          install: 'false'
       - name: Build & smoke server
-        run: bash server/utils/build-release.sh .
+        run: |
+          bun install --frozen-lockfile --filter @pierre/server
+          bash server/utils/build-release.sh .
       - name: Build & smoke CLI
         run: |
+          rm -rf node_modules */node_modules
+          bun install --frozen-lockfile --filter @pierre/cli
           bun build --compile --target=bun-linux-x64 --no-compile-autoload-dotenv \
             cli/src/main.ts --outfile "$RUNNER_TEMP/pierre-cli"
           test "$("$RUNNER_TEMP/pierre-cli" --version)" = "cli-$(jq -r .version cli/package.json)"
