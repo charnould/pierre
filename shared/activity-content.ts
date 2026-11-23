@@ -49,10 +49,6 @@ export type TaskContent = {
   completed_on?: string
 }
 
-export function noteContent(text?: string): NoteContent {
-  return { version: 1, ...(text ? { text } : {}) }
-}
-
 export function completedTaskContent(input: {
   title: string
   result?: string

@@ -1,4 +1,4 @@
-export type ReleaseAsset = { name: string; sha256: string }
+type ReleaseAsset = { name: string; sha256: string }
 
 export type Release = {
   tag: string

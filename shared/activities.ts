@@ -369,7 +369,7 @@ export type PostalAddress = {
   country: string
 }
 
-export type ElectronicRecipient = {
+type ElectronicRecipient = {
   email: string
   legalStatus: 'PROFESSIONAL' | 'INDIVIDUAL'
   firstName?: string
@@ -384,7 +384,7 @@ export type MailDocument = {
   contentBase64: string
 }
 
-export type ConsentProof = {
+type ConsentProof = {
   reference: string
   grantedAt: string
   source: string

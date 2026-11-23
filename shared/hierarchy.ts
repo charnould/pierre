@@ -1,5 +1,5 @@
-export const HIERARCHY_SUFFIX = '_hierarchie'
-export const HIERARCHY_SEPARATOR = ' > '
+const HIERARCHY_SUFFIX = '_hierarchie'
+const HIERARCHY_SEPARATOR = ' > '
 
 export const HIERARCHY_CONVENTION = {
   applies_to_suffix: HIERARCHY_SUFFIX,

@@ -15,12 +15,6 @@ export type ChatBoot = {
   embed?: boolean
 }
 
-export type ChatBootResponse = { data: ChatBoot }
-
-export function isTraceMode(value: unknown): value is TraceMode {
-  return typeof value === 'string' && (TRACE_MODES as readonly string[]).includes(value)
-}
-
 export function showsThinking(trace: TraceMode): boolean {
   return trace === 'collapsed' || trace === 'expanded'
 }

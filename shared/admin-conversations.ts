@@ -38,7 +38,7 @@ export type ConversationMessage = {
   content: string
 }
 
-export type ConversationComment = {
+type ConversationComment = {
   id: string
   author: string
   body: string
