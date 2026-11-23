@@ -1,8 +1,9 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  // These are copied or emitted by build/package steps rather than imported as modules.
+  // Static/emitted assets not imported as TS modules (docs/assets also holds legacy HTML assets).
   "ignore": [
     "desktop/src/assets/report/**/*",
+    "docs/assets/**/*",
     "server/assets/dist/**/*",
     "server/assets/embed/*.css"
   ],
@@ -16,6 +17,7 @@
         "config/release.ts!",
         "config/release.test.ts",
         "config/checks/*.test.ts",
+        "config/root-tests/*.test.ts",
         "shared/**/*.test.ts"
       ],
       "ignoreDependencies": [
@@ -40,6 +42,7 @@
         "preload/mascot.ts!",
         "src/app/main.tsx!",
         "src/chat-web/main.tsx!",
+        "src/intake-web/main.tsx!",
         "src/mascot/main.tsx!",
         "**/*.test.ts",
         "**/*.test.tsx"
@@ -57,7 +60,11 @@
         "@electron-forge/maker-zip",
         // desktop/build-plugin.ts spawns this binary. Knip cannot see the name.
         "@tailwindcss/cli"
-      ]
+      ],
+      // shadcn/ui primitives expose their full compound API for future composition.
+      "ignoreIssues": {
+        "src/shared/components/ui/**": ["exports", "types"]
+      }
     },
     "docs": {
       "entry": ["scripts/build.ts!", "scripts/**/*.test.ts"]
@@ -67,7 +74,7 @@
     },
     "cli": {
       "entry": ["src/main.ts!", "tests/**/*.test.ts"],
-      "project": ["src/**/*.ts!", "tests/**/*.ts!"]
+      "project": ["src/**/*.ts!", "tests/**/*.ts"]
     },
     "server": {
       "ignoreDependencies": [
@@ -85,6 +92,7 @@
         "utils/ensure-carl.ts!",
         "utils/ensure-speech.ts!",
         "tests/live/cm-channels.ts!",
+        "tests/live/maileva.ts!",
         "tests/**/*.test.ts"
       ],
       "project": ["**/*.{ts,tsx,css}!", "!tests/**!"]

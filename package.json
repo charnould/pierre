@@ -31,10 +31,10 @@
   "scripts": {
     "desktop:build": "bun desktop/build.ts",
     "desktop:dev": "bun desktop/dev.ts",
-    "desktop:make": "bun desktop:build && cd desktop && bun x electron-forge make",
-    "desktop:package": "bun desktop:build && cd desktop && bun x electron-forge package",
+    "desktop:make": "bun desktop:build && bun run --cwd desktop make",
+    "desktop:package": "bun desktop:build && bun run --cwd desktop package",
     "desktop:start": "cd desktop && bun x electron .",
-    "docs": "bun --filter @pierre/docs generate",
+    "docs": "bun run --cwd docs generate",
     "knip": "knip --config ./config/knip.jsonc --no-config-hints",
     "knip:production": "knip --config ./config/knip.jsonc --no-config-hints --production --include files,dependencies",
     "pierre:config": "bun test config/checks/",
