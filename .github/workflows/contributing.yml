@@ -4,19 +4,25 @@ on:
   pull_request:
     types: [opened, edited, synchronize, reopened]
 
+concurrency:
+  group: contributing-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
-  conditions:
-    name: Conditions
+  terms:
+    name: Terms agreement
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - name: Case cochée
+      - name: Check agreement
+        if: github.event.pull_request.user.login != github.repository_owner
         env:
           BODY: ${{ github.event.pull_request.body }}
         run: |
-          printf '%s\n' "$BODY" | grep -Eq -- "- \[[xX]\] J'accepte les conditions de" \
+          printf '%s\n' "$BODY" | grep -Eq -- "- \[[[:space:]]*[xX][[:space:]]*\] J'accepte les conditions de" \
             || {
               echo "Cochez « J'accepte les conditions de CONTRIBUTING.md »."
               exit 1
