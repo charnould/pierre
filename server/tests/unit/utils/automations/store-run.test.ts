@@ -5,10 +5,12 @@ import { mkdir, rm } from 'node:fs/promises'
 import { build_rattachement } from '../../../../utils/activities/rows'
 import { create_trusted_activity } from '../../../../utils/activities/write'
 import {
+  abort_automation_run,
   reset_automation_executor,
   run_automation_now,
   run_due_automations,
-  set_automation_executor
+  set_automation_executor,
+  stop_automation_run
 } from '../../../../utils/automations/run'
 import {
   claim_automation,
@@ -344,5 +346,172 @@ describe('automations worker', () => {
     await run_due_automations()
     const afterRun = get_automation(auto.id, alice)!
     expect(afterRun.lastRunStatus).toBe('success')
+  })
+
+  it('deletes a running automation, aborts its active run, and emits no report activity', async () => {
+    let started!: () => void
+    const executorStarted = new Promise<void>((resolve) => {
+      started = resolve
+    })
+    let aborted = false
+    set_automation_executor(async (_automation, { signal }) => {
+      started()
+      return await new Promise((_resolve, reject) => {
+        signal.addEventListener(
+          'abort',
+          () => {
+            aborted = true
+            reject(new DOMException('Aborted', 'AbortError'))
+          },
+          { once: true }
+        )
+      })
+    })
+
+    const auto = await create_automation(alice.email, {
+      type: 'report',
+      name: 'Running delete',
+      frequency: 'daily',
+      frequencyTime: '08:00',
+      prompt: 'p',
+      mentions: ['bob']
+    })
+    set_automation_pin(auto.id, bob, true)
+
+    const running = run_automation_now(auto.id, alice)
+    await executorStarted
+    expect(get_automation(auto.id, alice)?.status).toBe('running')
+
+    delete_automation(auto.id, alice)
+    abort_automation_run(auto.id)
+
+    await expect(running).rejects.toThrow('Automation not found')
+    expect(aborted).toBe(true)
+    expect(get_automation(auto.id, alice)).toBeNull()
+
+    const db = new Database(paths.database)
+    const count = db
+      .query<{ n: number }, [string]>('SELECT COUNT(*) AS n FROM activites WHERE rattachement = ?')
+      .get(build_rattachement('automations', auto.id))
+    const bobRow = db
+      .query<{ preferences: string }, [string]>('SELECT preferences FROM users WHERE email = ?')
+      .get('bob@example.com')
+    db.close()
+    expect(count!.n).toBe(0)
+    expect(JSON.parse(bobRow!.preferences).pinned_automation_ids).toEqual([])
+  })
+
+  it('stops a running scheduled automation, preserves pin, and emits no report activity or error log', async () => {
+    const errorSpy = spyOn(console, 'error').mockImplementation(() => {})
+    let started!: () => void
+    const executorStarted = new Promise<void>((resolve) => {
+      started = resolve
+    })
+    let aborted = false
+    set_automation_executor(async (_automation, { signal }) => {
+      started()
+      return await new Promise((_resolve, reject) => {
+        signal.addEventListener(
+          'abort',
+          () => {
+            aborted = true
+            reject(new DOMException('Aborted', 'AbortError'))
+          },
+          { once: true }
+        )
+      })
+    })
+
+    const auto = await create_automation(alice.email, {
+      type: 'report',
+      name: 'Stop me',
+      frequency: 'daily',
+      frequencyTime: '08:00',
+      prompt: 'p'
+    })
+    set_automation_pin(auto.id, alice, true)
+
+    try {
+      const running = run_automation_now(auto.id, alice)
+      await executorStarted
+      expect(get_automation(auto.id, alice)?.status).toBe('running')
+
+      const stopped = stop_automation_run(auto.id, alice)
+      expect(aborted).toBe(true)
+      expect(stopped.status).toBe('scheduled')
+      expect(stopped.nextRunAt).toBeTruthy()
+      expect(stopped.lastRunStatus).toBe('error')
+      expect(stopped.pinned).toBe(true)
+
+      await running
+      expect(errorSpy).not.toHaveBeenCalled()
+
+      const db = new Database(paths.database)
+      const count = db
+        .query<{ n: number }, [string]>(
+          'SELECT COUNT(*) AS n FROM activites WHERE rattachement = ?'
+        )
+        .get(build_rattachement('automations', auto.id))
+      db.close()
+      expect(count!.n).toBe(0)
+    } finally {
+      errorSpy.mockRestore()
+    }
+  })
+
+  it('stops a running paused automation and restores paused without next_run_at', async () => {
+    let started!: () => void
+    const executorStarted = new Promise<void>((resolve) => {
+      started = resolve
+    })
+    set_automation_executor(async (_automation, { signal }) => {
+      started()
+      return await new Promise((_resolve, reject) => {
+        signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), {
+          once: true
+        })
+      })
+    })
+
+    const auto = await create_automation(alice.email, {
+      type: 'report',
+      name: 'Paused stop',
+      frequency: 'daily',
+      frequencyTime: '08:00',
+      prompt: 'p'
+    })
+    await update_automation(auto.id, alice, { status: 'paused' })
+
+    const running = run_automation_now(auto.id, alice)
+    await executorStarted
+
+    const stopped = stop_automation_run(auto.id, alice)
+    expect(stopped.status).toBe('paused')
+    expect(stopped.nextRunAt).toBeNull()
+    expect(stopped.lastRunStatus).toBe('error')
+    await running
+  })
+
+  it('unstucks a crash-stuck running automation without an active in-memory run', async () => {
+    const auto = await create_automation(alice.email, {
+      type: 'report',
+      name: 'Stuck stop',
+      frequency: 'daily',
+      frequencyTime: '08:00',
+      prompt: 'p'
+    })
+    const db = new Database(paths.database)
+    db.run(
+      `UPDATE automations
+       SET status = 'running', run_token = ?, lease_expires_at = ?
+       WHERE id = ?`,
+      [Bun.randomUUIDv7(), new Date(Date.now() + 60_000).toISOString(), auto.id]
+    )
+    db.close()
+
+    const stopped = stop_automation_run(auto.id, alice)
+    expect(stopped.status).toBe('scheduled')
+    expect(stopped.lastRunStatus).toBe('error')
+    expect(stopped.nextRunAt).toBeTruthy()
   })
 })

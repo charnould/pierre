@@ -49,7 +49,7 @@ describe('report consigne', () => {
 })
 
 describe('report execution', () => {
-  it('stores the article from the write call and ignores the sentence', async () => {
+  it('stores the single article from the final message and ignores earlier turns', async () => {
     let mission = ''
     let automationPrompt: string | undefined
     const result = await execute_automation(
@@ -61,19 +61,22 @@ describe('report execution', () => {
         mission = prompt
         automationPrompt = options?.automationPrompt
         yield {
-          type: 'tool_execution_start' as const,
-          toolCallId: 'write-1',
-          toolName: 'write',
-          args: {
-            path: 'rapport.html',
-            content: '<article class="report"><p>Les impayés.</p></article>'
+          type: 'message_end' as const,
+          message: {
+            role: 'assistant' as const,
+            content: [{ type: 'text' as const, text: 'Analyse en cours...' }]
           }
         }
         yield {
           type: 'message_end' as const,
           message: {
             role: 'assistant' as const,
-            content: [{ type: 'text' as const, text: 'Phrase après le dernier outil.' }]
+            content: [
+              {
+                type: 'text' as const,
+                text: 'Intro.\n<article class="report"><p>Les impayés.</p></article>\nFin.'
+              }
+            ]
           }
         }
       }
@@ -83,7 +86,7 @@ describe('report execution', () => {
     expect(result.contenu).toBe('<article class="report"><p>Les impayés.</p></article>')
   })
 
-  it('rejects a transcript without exactly one report article', async () => {
+  it('rejects a final message without exactly one report article', async () => {
     await expect(run([{ type: 'text', text: '<p>Pas d’article.</p>' }])).rejects.toThrow(
       'Rapport invalide.'
     )

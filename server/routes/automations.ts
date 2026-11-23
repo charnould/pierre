@@ -2,7 +2,11 @@ import { Hono } from 'hono'
 
 import { type AuthContext, authenticate, type AuthEnv } from '../utils/authenticate-user'
 import { authorizeModule } from '../utils/authorize-role'
-import { run_automation_now } from '../utils/automations/run'
+import {
+  abort_automation_run,
+  run_automation_now,
+  stop_automation_run
+} from '../utils/automations/run'
 import { CreateAutomationBodySchema, PatchAutomationBodySchema } from '../utils/automations/schemas'
 import {
   AutomationsError,
@@ -107,6 +111,7 @@ export const deleteAutomation = async (c: AuthContext) => {
   }
   try {
     delete_automation(id, c.get('user'))
+    abort_automation_run(id)
     return c.json({ data: { deleted: true } })
   } catch (error) {
     if (error instanceof AutomationsError) {
@@ -145,6 +150,23 @@ export const runAutomation = async (c: AuthContext) => {
     }
     console.error('[automations.run]', error)
     return c.json({ error: { code: 'internal_error', message: 'Failed to run automation' } }, 500)
+  }
+}
+
+export const stopAutomationRun = async (c: AuthContext) => {
+  const id = c.req.param('id')
+  if (!id) {
+    return c.json({ error: { code: 'invalid_body', message: 'Missing id' } }, 400)
+  }
+  try {
+    return c.json({ data: stop_automation_run(id, c.get('user')) })
+  } catch (error) {
+    if (error instanceof AutomationsError) {
+      const status = error.code === 'not_found' ? 404 : error.code === 'forbidden' ? 403 : 400
+      return c.json({ error: { code: error.code, message: error.message } }, status)
+    }
+    console.error('[automations.stopRun]', error)
+    return c.json({ error: { code: 'internal_error', message: 'Failed to stop automation' } }, 500)
   }
 }
 
@@ -194,5 +216,6 @@ automations.post('/', createAutomation)
 automations.patch('/:id', patchAutomation)
 automations.delete('/:id', deleteAutomation)
 automations.post('/:id/run', runAutomation)
+automations.delete('/:id/run', stopAutomationRun)
 automations.post('/:id/pin', pinAutomation)
 automations.delete('/:id/pin', unpinAutomation)
