@@ -1,4 +1,4 @@
-name: Release CLI
+name: Release · CLI
 
 on:
   push:
@@ -14,8 +14,12 @@ concurrency:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   prepare:
+    name: Prepare release
     runs-on: ubuntu-latest
     outputs:
       publish: ${{ steps.release.outputs.publish }}
@@ -28,7 +32,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.4
+          bun-version-file: config/.bun-version
 
       - name: Reconcile release state
         id: release
@@ -38,6 +42,7 @@ jobs:
           bun config/release.ts prepare cli
 
   release:
+    name: Build, publish & smoke (linux-x64)
     needs: prepare
     if: needs.prepare.outputs.publish == 'true'
     runs-on: ubuntu-latest
@@ -58,7 +63,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.4
+          bun-version-file: config/.bun-version
 
       - name: Build CLI artifacts
         working-directory: source

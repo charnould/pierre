@@ -1,4 +1,4 @@
-name: CLI Smoke
+name: Smoke · CLI
 
 on:
   schedule:
@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   published-cli:
+    name: Verify published installer
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
