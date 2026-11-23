@@ -1,4 +1,4 @@
-name: Release Desktop
+name: Release · Desktop
 
 on:
   push:
@@ -16,8 +16,12 @@ concurrency:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   prepare:
+    name: Prepare release
     runs-on: ubuntu-latest
     outputs:
       previous: ${{ steps.release.outputs.previous }}
@@ -31,7 +35,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.4
+          bun-version-file: config/.bun-version
 
       - name: Reconcile release state
         id: release
@@ -41,6 +45,7 @@ jobs:
           bun config/release.ts prepare desktop
 
   build-windows:
+    name: Build Windows (x64)
     needs: prepare
     if: needs.prepare.outputs.publish == 'true'
     runs-on: windows-latest
@@ -51,7 +56,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.4
+          bun-version-file: config/.bun-version
 
       - name: Build Windows artifacts
         run: |
@@ -76,6 +81,7 @@ jobs:
           retention-days: 1
 
   build-macos:
+    name: Build macOS (arm64)
     needs: prepare
     if: needs.prepare.outputs.publish == 'true'
     runs-on: macos-latest
@@ -86,7 +92,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.4
+          bun-version-file: config/.bun-version
 
       - name: Build macOS artifacts
         run: |
@@ -107,6 +113,7 @@ jobs:
           retention-days: 1
 
   publish:
+    name: Publish release
     needs: [prepare, build-windows, build-macos]
     if: needs.prepare.outputs.publish == 'true'
     runs-on: ubuntu-latest
@@ -121,7 +128,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.4
+          bun-version-file: config/.bun-version
 
       - uses: actions/download-artifact@v4
         with:
@@ -134,6 +141,7 @@ jobs:
           bun config/release.ts publish desktop "$REF" release-assets
 
   smoke:
+    name: Verify auto-update
     needs: [prepare, publish]
     if: needs.prepare.outputs.publish == 'true'
     runs-on: ubuntu-latest
