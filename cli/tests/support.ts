@@ -26,7 +26,7 @@ export const configuredText = (changes: Record<string, string> = {}) =>
     `PUBLIC_CHAT_PER_MINUTE=${changes['PUBLIC_CHAT_PER_MINUTE'] ?? '600'}`,
     `SMOLVM_MAX_ACTIVE=${changes['SMOLVM_MAX_ACTIVE'] ?? '96'}`,
     `SMOLVM_POOL_SIZE=${changes['SMOLVM_POOL_SIZE'] ?? '4'}`,
-    `SMOLVM_CPUS=${changes['SMOLVM_CPUS'] ?? '1'}`,
+    `SMOLVM_CPUS=${changes['SMOLVM_CPUS'] ?? '2'}`,
     `SMOLVM_MEMORY_MIB=${changes['SMOLVM_MEMORY_MIB'] ?? '512'}`,
     ''
   ].join('\n')
