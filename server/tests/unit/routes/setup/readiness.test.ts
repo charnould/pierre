@@ -6,7 +6,7 @@ import { Hono } from 'hono'
 import { getAdminSetup } from '../../../../routes/setup/admin'
 import { getSetup } from '../../../../routes/setup/get'
 import type { User } from '../../../../utils/_schema'
-import { migrate_datastore } from '../../../../utils/datastore-migrations'
+import { migrate_datastore } from '../../../../utils/migrations'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
 import {
   defaultChatbotReady,

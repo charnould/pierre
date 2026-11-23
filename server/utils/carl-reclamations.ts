@@ -2,7 +2,7 @@ import { Database } from 'bun:sqlite'
 
 import { FIELDS, type Mention } from './carl'
 import { openDatastore } from './datastore-db'
-import { migrate_datastore } from './datastore-migrations'
+import { migrate_datastore } from './migrations'
 import { datastorePaths } from './paths'
 
 const BATCH = 100

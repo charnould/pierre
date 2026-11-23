@@ -3,7 +3,6 @@ import { afterAll, beforeAll, expect, it, spyOn } from 'bun:test'
 import { mkdir, readdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 
-import { migrate_datastore } from '../../../utils/datastore-migrations'
 import {
   cleanupKnowledgeStaging,
   initializeKnowledgeBuildCoordinator,
@@ -18,6 +17,7 @@ import {
   updateKnowledgeSourceMetadata
 } from '../../../utils/knowledge/catalog'
 import { importKnowledgeFiles } from '../../../utils/knowledge/import-files'
+import { migrate_datastore } from '../../../utils/migrations'
 import { datastorePaths, setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import { seedInstanceSetup } from '../../seed-setup'
 

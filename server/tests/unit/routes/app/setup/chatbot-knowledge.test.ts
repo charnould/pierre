@@ -3,8 +3,8 @@ import { mkdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import { syncChatbotKnowledge } from '../../../../../routes/setup/admin'
-import { migrate_datastore } from '../../../../../utils/datastore-migrations'
 import { listKnowledgeBuilds } from '../../../../../utils/knowledge/catalog'
+import { migrate_datastore } from '../../../../../utils/migrations'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../../utils/paths'
 import { writeSetup } from '../../../../../utils/setup-store'
 

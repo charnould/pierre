@@ -6,11 +6,11 @@ import { basename, join } from 'node:path'
 
 import { HIERARCHY_CONVENTION } from '../../../../shared/hierarchy'
 import { normalize_knowledge_name } from '../../../../shared/knowledge'
-import { migrate_datastore } from '../../../utils/datastore-migrations'
 import { publishCoreTables } from '../../../utils/knowledge/build-knowledge'
 import { import_communes_par_code_postal_table } from '../../../utils/knowledge/codes-postaux'
 import { buildProfileDatabase, documentParts } from '../../../utils/knowledge/project-profile'
 import { import_rows } from '../../../utils/knowledge/sqlite-table-import'
+import { migrate_datastore } from '../../../utils/migrations'
 import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 
 // ─── Isolated test environment ────────────────────────────────────────────────

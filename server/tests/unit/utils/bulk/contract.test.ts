@@ -7,7 +7,7 @@ import {
   emptyBulkOperationDefinition
 } from '../../../../../shared/bulk-operations'
 import { BulkOperationDefinitionSchema } from '../../../../utils/bulk/query'
-import { migrate_datastore } from '../../../../utils/datastore-migrations'
+import { migrate_datastore } from '../../../../utils/migrations'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
 import { seedInstanceSetup } from '../../../seed-setup'
 

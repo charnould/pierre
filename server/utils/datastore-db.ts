@@ -13,5 +13,6 @@ export function openDatastore(options?: {
   })
   db.run('PRAGMA busy_timeout = 5000')
   db.run('PRAGMA foreign_keys = ON')
+  if (!options?.readonly) db.run('PRAGMA synchronous = NORMAL')
   return db
 }
