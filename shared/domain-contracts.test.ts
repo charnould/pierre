@@ -1,7 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
 import { parseCommunicationOpenedContent } from './activity-content'
-import { encodeScheduleToCron } from './automations'
 import { type BulkDelivery, bulkDeliveryError } from './bulk-operations'
 import {
   isNotificationDeliveryStatus,
@@ -9,6 +8,11 @@ import {
   notificationDeliveryStatusBadgeVariant,
   notificationDeliveryStatusLabel
 } from './notification-delivery'
+import {
+  DEFAULT_AUTOMATION_SCHEDULE,
+  formatScheduleSummary,
+  switchScheduleFrequency
+} from './schedule'
 
 describe('bulk delivery contracts', () => {
   test('rejects an empty fallback received from an untyped boundary', () => {
@@ -17,12 +21,29 @@ describe('bulk delivery contracts', () => {
   })
 })
 
-describe('automation schedule contracts', () => {
-  test('rejects invalid times instead of producing invalid cron', () => {
-    expect(() => encodeScheduleToCron({ frequency: 'daily', frequencyTime: '99:99' })).toThrow(
-      'Invalid time'
+describe('schedule contracts', () => {
+  test('switches frequencies while preserving time/day and formats French summaries', () => {
+    const switched = switchScheduleFrequency(
+      { frequency: 'monthly', dayOfMonth: 15, hour: 9, minute: 30 },
+      'months'
     )
-    expect(() => encodeScheduleToCron({ frequency: 'daily', frequencyTime: '08:30' })).not.toThrow()
+    expect(switched).toEqual({
+      frequency: 'months',
+      months: [1],
+      dayOfMonth: 15,
+      hour: 9,
+      minute: 30
+    })
+    expect(formatScheduleSummary(DEFAULT_AUTOMATION_SCHEDULE)).toBe('Les lundis à 08:00')
+    expect(
+      formatScheduleSummary({
+        frequency: 'months',
+        months: [3, 6, 9, 12],
+        dayOfMonth: 15,
+        hour: 9,
+        minute: 0
+      })
+    ).toBe('Le 15 de mars, juin, sept. et déc. à 09:00')
   })
 })
 
