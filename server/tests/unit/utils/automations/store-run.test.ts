@@ -73,9 +73,7 @@ describe('automations store', () => {
     const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Rapport test',
-      frequency: 'weekly',
-      frequencyDay: 'lundi',
-      frequencyTime: '08:00',
+      schedule: { frequency: 'weekly', days: [1], hour: 8, minute: 0 },
       prompt: 'Analyse',
       maxReports: 3,
       mentions: ['bob']
@@ -83,7 +81,7 @@ describe('automations store', () => {
     expect(auto.owner).toBe(alice.email)
     expect(auto.status).toBe('scheduled')
     expect(auto.nextRunAt).toBeTruthy()
-    expect(auto.cron).toBe('0 8 * * 1')
+    expect(auto.schedule).toEqual({ frequency: 'weekly', days: [1], hour: 8, minute: 0 })
     expect(list_automations(alice)).toHaveLength(1)
     expect(list_automations(bob)).toHaveLength(1)
     expect(list_automations(carol)).toHaveLength(0)
@@ -94,8 +92,7 @@ describe('automations store', () => {
     const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'X',
-      frequency: 'daily',
-      frequencyTime: '08:00',
+      schedule: { frequency: 'daily', hour: 8, minute: 0 },
       prompt: 'p',
       mentions: ['bob']
     })
@@ -116,8 +113,7 @@ describe('automations store', () => {
     const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Pin me',
-      frequency: 'daily',
-      frequencyTime: '08:00',
+      schedule: { frequency: 'daily', hour: 8, minute: 0 },
       prompt: 'p',
       mentions: ['bob']
     })
@@ -137,8 +133,7 @@ describe('automations store', () => {
     const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Pause',
-      frequency: 'daily',
-      frequencyTime: '08:00',
+      schedule: { frequency: 'daily', hour: 8, minute: 0 },
       prompt: 'p'
     })
     const paused = await update_automation(auto.id, alice, { status: 'paused' })
@@ -153,8 +148,7 @@ describe('automations store', () => {
     const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Fmt',
-      frequency: 'daily',
-      frequencyTime: '08:00',
+      schedule: { frequency: 'daily', hour: 8, minute: 0 },
       prompt: '-  item1\n-   item2\n\n\n'
     })
     expect(auto.config).toMatchObject({ prompt: '- item1\n- item2\n' })
@@ -173,8 +167,7 @@ describe('automations worker', () => {
     const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Run me',
-      frequency: 'daily',
-      frequencyTime: '08:00',
+      schedule: { frequency: 'daily', hour: 8, minute: 0 },
       prompt: 'p',
       maxReports: 6,
       mentions: ['bob']
@@ -202,8 +195,7 @@ describe('automations worker', () => {
     const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Claim',
-      frequency: 'daily',
-      frequencyTime: '08:00',
+      schedule: { frequency: 'daily', hour: 8, minute: 0 },
       prompt: 'p'
     })
     const db = new Database(paths.database)
@@ -220,8 +212,7 @@ describe('automations worker', () => {
     const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Lease',
-      frequency: 'daily',
-      frequencyTime: '08:00',
+      schedule: { frequency: 'daily', hour: 8, minute: 0 },
       prompt: 'p'
     })
     const db = new Database(paths.database)
@@ -249,8 +240,7 @@ describe('automations worker', () => {
     const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Fail',
-      frequency: 'daily',
-      frequencyTime: '08:00',
+      schedule: { frequency: 'daily', hour: 8, minute: 0 },
       prompt: 'p'
     })
     try {
@@ -268,8 +258,7 @@ describe('automations worker', () => {
     const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Trim',
-      frequency: 'daily',
-      frequencyTime: '08:00',
+      schedule: { frequency: 'daily', hour: 8, minute: 0 },
       prompt: 'p',
       maxReports: 2
     })
@@ -298,8 +287,7 @@ describe('automations worker', () => {
     const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Paused run',
-      frequency: 'daily',
-      frequencyTime: '08:00',
+      schedule: { frequency: 'daily', hour: 8, minute: 0 },
       prompt: 'p'
     })
     await update_automation(auto.id, alice, { status: 'paused' })
@@ -313,8 +301,7 @@ describe('automations worker', () => {
     const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Due',
-      frequency: 'daily',
-      frequencyTime: '08:00',
+      schedule: { frequency: 'daily', hour: 8, minute: 0 },
       prompt: 'p'
     })
     const db = new Database(paths.database)
@@ -371,8 +358,7 @@ describe('automations worker', () => {
     const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Running delete',
-      frequency: 'daily',
-      frequencyTime: '08:00',
+      schedule: { frequency: 'daily', hour: 8, minute: 0 },
       prompt: 'p',
       mentions: ['bob']
     })
@@ -425,8 +411,7 @@ describe('automations worker', () => {
     const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Stop me',
-      frequency: 'daily',
-      frequencyTime: '08:00',
+      schedule: { frequency: 'daily', hour: 8, minute: 0 },
       prompt: 'p'
     })
     set_automation_pin(auto.id, alice, true)
@@ -476,8 +461,7 @@ describe('automations worker', () => {
     const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Paused stop',
-      frequency: 'daily',
-      frequencyTime: '08:00',
+      schedule: { frequency: 'daily', hour: 8, minute: 0 },
       prompt: 'p'
     })
     await update_automation(auto.id, alice, { status: 'paused' })
@@ -496,8 +480,7 @@ describe('automations worker', () => {
     const auto = await create_automation(alice.email, {
       type: 'report',
       name: 'Stuck stop',
-      frequency: 'daily',
-      frequencyTime: '08:00',
+      schedule: { frequency: 'daily', hour: 8, minute: 0 },
       prompt: 'p'
     })
     const db = new Database(paths.database)

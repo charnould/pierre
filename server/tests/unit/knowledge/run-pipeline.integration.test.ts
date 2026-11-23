@@ -429,7 +429,7 @@ describe('knowledge pipeline', () => {
           fields: [{ type: 'short_text', label: 'Objet', required: true }]
         },
         access: { passwords: [] },
-        notifications: { mode: 'none' }
+        notifications: { frequency: 'none' }
       }
     })
     publish_intake(draft.id, { email: 'alice@example.org', isAdministrator: true })

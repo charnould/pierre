@@ -92,7 +92,7 @@ const baseConfig = (overrides: Partial<IntakeConfig> = {}): IntakeConfig => ({
     ]
   },
   access: { passwords: [] },
-  notifications: { mode: 'immediate' },
+  notifications: { frequency: 'immediate' },
   ...overrides
 })
 
@@ -361,49 +361,68 @@ describe('intakes core lifecycle, permissions, validation, export, digests and k
     expect(purged.submissionCount).toBe(0)
   })
 
-  it('sends hourly and daily digests cleanly and survives restarts without duplicating', () => {
+  it('sends scheduled digests (hourly, daily, weekly, months), handles mode switches, close/reopen and DST', () => {
+    using db = openDatastore()
+
+    // 1. Hourly at :15
     const hourly = publish_intake(
       create_intake(
         alice.email,
         baseBody({
           tableName: 'digest_horaire',
-          config: baseConfig({ notifications: { mode: 'hourly' } })
+          config: baseConfig({ notifications: { frequency: 'hourly', minute: 15 } })
         })
       ).id,
       alice
     )
+    expect(hourly.nextNotifyAt).toBeTruthy()
+    db.run(
+      'UPDATE intakes SET published_at = ?, last_notified_at = ?, next_notify_at = ? WHERE id = ?',
+      [
+        '2026-11-22T09:00:00.000Z',
+        '2026-11-22T09:00:00.000Z',
+        '2026-11-22T09:15:00.000Z',
+        hourly.id
+      ]
+    )
 
-    // 0 new submissions -> 0 digests
-    expect(run_due_intake_digests(new Date('2026-11-22T10:00:00Z'))).toBe(0)
+    // Before :15 -> 0
+    expect(run_due_intake_digests(new Date('2026-11-22T09:14:00.000Z'))).toBe(0)
+    // At :15 with 0 new submissions -> 0 emitted, advances next_notify_at to 10:15 without moving last_notified_at
+    expect(run_due_intake_digests(new Date('2026-11-22T09:15:00.000Z'))).toBe(0)
+    expect(get_intake(hourly.id, alice)?.nextNotifyAt).toBe('2026-11-22T10:15:00.000Z')
+    expect(get_intake(hourly.id, alice)?.lastNotifiedAt).toBe('2026-11-22T09:00:00.000Z')
 
-    // 1 new submission -> full detail with submissionId
-    record_intake_submission(hourly, {
-      submissionId: '0198f1a0-7b6c-7000-8000-000000000201',
-      columnValues: {
-        nom: 'Dupont',
-        urgence: 'Normale',
-        accord_acces: 0
-      },
-      files: []
-    })
-    expect(run_due_intake_digests(new Date('2026-11-22T11:00:00Z'))).toBe(1)
-    // Second tick with no new rows -> 0
-    expect(run_due_intake_digests(new Date('2026-11-22T12:00:00Z'))).toBe(0)
+    // 1 new submission -> full detail with submissionId at 10:15
+    db.run(
+      `INSERT INTO intake_digest_horaire (id, date_creation, nom, urgence, accord_acces)
+       VALUES (?, ?, ?, ?, ?)`,
+      ['0198f1a0-7b6c-7000-8000-000000000201', '2026-11-22T09:40:00.000Z', 'Dupont', 'Normale', 0]
+    )
+    expect(run_due_intake_digests(new Date('2026-11-22T10:15:00.000Z'))).toBe(1)
+    expect(get_intake(hourly.id, alice)?.nextNotifyAt).toBe('2026-11-22T11:15:00.000Z')
+    // Same-minute re-run -> 0 (next_notify_at already moved to 11:15)
+    expect(run_due_intake_digests(new Date('2026-11-22T10:15:30.000Z'))).toBe(0)
 
-    // 2 new submissions -> summary digest
-    record_intake_submission(hourly, {
-      submissionId: '0198f1a0-7b6c-7000-8000-000000000202',
-      columnValues: { nom: 'Martin', urgence: 'Haute', accord_acces: 1 },
-      files: []
-    })
-    record_intake_submission(hourly, {
-      submissionId: '0198f1a0-7b6c-7000-8000-000000000203',
-      columnValues: { nom: 'Durand', urgence: 'Normale', accord_acces: 0 },
-      files: []
-    })
-    expect(run_due_intake_digests(new Date('2026-11-22T13:00:00Z'))).toBe(1)
+    // 2 new submissions -> summary digest at 11:15
+    db.run(
+      `INSERT INTO intake_digest_horaire (id, date_creation, nom, urgence, accord_acces)
+       VALUES (?, ?, ?, ?, ?), (?, ?, ?, ?, ?)`,
+      [
+        '0198f1a0-7b6c-7000-8000-000000000202',
+        '2026-11-22T10:30:00.000Z',
+        'Martin',
+        'Haute',
+        1,
+        '0198f1a0-7b6c-7000-8000-000000000203',
+        '2026-11-22T10:45:00.000Z',
+        'Durand',
+        'Normale',
+        0
+      ]
+    )
+    expect(run_due_intake_digests(new Date('2026-11-22T11:15:00.000Z'))).toBe(1)
 
-    using db = openDatastore()
     const rows = db
       .query<{ contenu: string }, [string]>(
         'SELECT contenu FROM activites WHERE rattachement = ? ORDER BY id ASC'
@@ -417,82 +436,221 @@ describe('intakes core lifecycle, permissions, validation, export, digests and k
     expect(second?.submissionId).toBeUndefined()
     expect(second?.note).toContain('2')
 
-    // Daily digest at 18:00 Europe/Paris (17:00 UTC in November): fires once, not again at 19:00
+    // 2. Daily digest at 18:30 Europe/Paris (17:30 UTC in November)
     const daily = publish_intake(
       create_intake(
         alice.email,
         baseBody({
           tableName: 'digest_quotidien',
-          config: baseConfig({ notifications: { mode: 'daily', hour: 18 } })
+          config: baseConfig({ notifications: { frequency: 'daily', hour: 18, minute: 30 } })
         })
       ).id,
       alice
     )
-    db.run('UPDATE intakes SET published_at = ?, last_notified_at = ? WHERE id = ?', [
-      '2026-11-22T08:00:00.000Z',
-      '2026-11-22T08:00:00.000Z',
-      daily.id
-    ])
+    db.run(
+      'UPDATE intakes SET published_at = ?, last_notified_at = ?, next_notify_at = ? WHERE id = ?',
+      ['2026-11-22T08:00:00.000Z', '2026-11-22T08:00:00.000Z', '2026-11-22T17:30:00.000Z', daily.id]
+    )
     db.run(
       `INSERT INTO intake_digest_quotidien (id, date_creation, nom, urgence, accord_acces)
        VALUES (?, ?, ?, ?, ?)`,
       ['0198f1a0-7b6c-7000-8000-000000000210', '2026-11-22T13:00:00.000Z', 'Matin', 'Normale', 0]
     )
-    // Before 18:00 Paris (16:00 UTC = 17:00 Paris) -> 0
-    expect(run_due_intake_digests(new Date('2026-11-22T16:00:00.000Z'))).toBe(0)
-    // At 18:00 Paris (17:00 UTC) -> emits once
-    expect(run_due_intake_digests(new Date('2026-11-22T17:00:00.000Z'))).toBe(1)
-    // New submission at 18:30 Paris -> must NOT re-fire at 19:00 Paris (18:00 UTC)
+    expect(run_due_intake_digests(new Date('2026-11-22T17:29:00.000Z'))).toBe(0)
+    expect(run_due_intake_digests(new Date('2026-11-22T17:30:00.000Z'))).toBe(1)
+    expect(get_intake(daily.id, alice)?.nextNotifyAt).toBe('2026-11-23T17:30:00.000Z')
     db.run(
       `INSERT INTO intake_digest_quotidien (id, date_creation, nom, urgence, accord_acces)
        VALUES (?, ?, ?, ?, ?)`,
-      ['0198f1a0-7b6c-7000-8000-000000000211', '2026-11-22T17:30:00.000Z', 'Soir', 'Haute', 1]
+      ['0198f1a0-7b6c-7000-8000-000000000211', '2026-11-22T18:00:00.000Z', 'Soir', 'Haute', 1]
     )
-    expect(run_due_intake_digests(new Date('2026-11-22T18:00:00.000Z'))).toBe(0)
-    // Next day at 18:00 Paris -> picks up the 18:30 submission
-    expect(run_due_intake_digests(new Date('2026-11-23T17:00:00.000Z'))).toBe(1)
+    expect(run_due_intake_digests(new Date('2026-11-22T18:30:00.000Z'))).toBe(0)
+    expect(run_due_intake_digests(new Date('2026-11-23T17:30:00.000Z'))).toBe(1)
 
-    // DST spring-forward (2026-03-29 Europe/Paris: 01:59 -> 03:00) & fall-back (2026-10-25: 02:00 twice)
+    // 3. Weekly multi-days [1, 4] (Mon & Thu) at 08:00 Paris + months [3, 9]
+    const weekly = publish_intake(
+      create_intake(
+        alice.email,
+        baseBody({
+          tableName: 'digest_hebdo',
+          config: baseConfig({
+            notifications: { frequency: 'weekly', days: [4, 1], hour: 8, minute: 0 }
+          })
+        })
+      ).id,
+      alice
+    )
+    // Zod sorts days ascending
+    expect(weekly.config.notifications).toEqual({
+      frequency: 'weekly',
+      days: [1, 4],
+      hour: 8,
+      minute: 0
+    })
+    // 2026-11-23 is Monday (07:00Z = 08:00 Paris CET)
+    db.run(
+      'UPDATE intakes SET published_at = ?, last_notified_at = ?, next_notify_at = ? WHERE id = ?',
+      [
+        '2026-11-22T08:00:00.000Z',
+        '2026-11-22T08:00:00.000Z',
+        '2026-11-23T07:00:00.000Z',
+        weekly.id
+      ]
+    )
+    db.run(
+      `INSERT INTO intake_digest_hebdo (id, date_creation, nom, urgence, accord_acces)
+       VALUES (?, ?, ?, ?, ?)`,
+      ['0198f1a0-7b6c-7000-8000-000000000230', '2026-11-22T12:00:00.000Z', 'Lundi', 'Normale', 0]
+    )
+    expect(run_due_intake_digests(new Date('2026-11-23T07:00:00.000Z'))).toBe(1)
+    // Next occurrence is Thursday 2026-11-26 08:00 Paris = 07:00Z
+    expect(get_intake(weekly.id, alice)?.nextNotifyAt).toBe('2026-11-26T07:00:00.000Z')
+
+    const seasonal = publish_intake(
+      create_intake(
+        alice.email,
+        baseBody({
+          tableName: 'digest_mois',
+          config: baseConfig({
+            notifications: {
+              frequency: 'months',
+              months: [9, 3],
+              dayOfMonth: 15,
+              hour: 9,
+              minute: 0
+            }
+          })
+        })
+      ).id,
+      alice
+    )
+    expect(seasonal.config.notifications).toEqual({
+      frequency: 'months',
+      months: [3, 9],
+      dayOfMonth: 15,
+      hour: 9,
+      minute: 0
+    })
+    db.run(
+      'UPDATE intakes SET published_at = ?, last_notified_at = ?, next_notify_at = ? WHERE id = ?',
+      [
+        '2026-03-01T08:00:00.000Z',
+        '2026-03-01T08:00:00.000Z',
+        '2026-03-15T08:00:00.000Z',
+        seasonal.id
+      ]
+    )
+    db.run(
+      `INSERT INTO intake_digest_mois (id, date_creation, nom, urgence, accord_acces)
+       VALUES (?, ?, ?, ?, ?)`,
+      ['0198f1a0-7b6c-7000-8000-000000000231', '2026-03-10T12:00:00.000Z', 'Mars', 'Normale', 0]
+    )
+    expect(run_due_intake_digests(new Date('2026-03-15T08:00:00.000Z'))).toBe(1)
+    // Next occurrence is September 15 09:00 CEST (07:00Z)
+    expect(get_intake(seasonal.id, alice)?.nextNotifyAt).toBe('2026-09-15T07:00:00.000Z')
+
+    // 4. Mode switches: immediate -> recurring advances last_notified_at; recurring -> recurring preserves it; -> none clears next_notify_at
+    const switching = publish_intake(
+      create_intake(
+        alice.email,
+        baseBody({
+          tableName: 'digest_switch',
+          config: baseConfig({ notifications: { frequency: 'immediate' } })
+        })
+      ).id,
+      alice
+    )
+    expect(switching.nextNotifyAt).toBeNull()
+    db.run('UPDATE intakes SET last_notified_at = ? WHERE id = ?', [
+      '2026-01-01T00:00:00.000Z',
+      switching.id
+    ])
+    const switchedToDaily = update_intake(switching.id, alice, {
+      config: {
+        ...switching.config,
+        notifications: { frequency: 'daily', hour: 9, minute: 0 }
+      }
+    })
+    expect(switchedToDaily.nextNotifyAt).toBeTruthy()
+    expect(switchedToDaily.lastNotifiedAt).not.toBe('2026-01-01T00:00:00.000Z')
+    const savedLastNotified = switchedToDaily.lastNotifiedAt
+    const switchedToHourly = update_intake(switching.id, alice, {
+      config: {
+        ...switchedToDaily.config,
+        notifications: { frequency: 'hourly', minute: 30 }
+      }
+    })
+    expect(switchedToHourly.lastNotifiedAt).toBe(savedLastNotified)
+    expect(switchedToHourly.nextNotifyAt).toBeTruthy()
+    const switchedToNone = update_intake(switching.id, alice, {
+      config: {
+        ...switchedToHourly.config,
+        notifications: { frequency: 'none' }
+      }
+    })
+    expect(switchedToNone.nextNotifyAt).toBeNull()
+
+    // 5. Close -> final digest drains pending submissions then clears next_notify_at; reopen -> recomputes next_notify_at
+    const closing = publish_intake(
+      create_intake(
+        alice.email,
+        baseBody({
+          tableName: 'digest_close',
+          config: baseConfig({ notifications: { frequency: 'hourly', minute: 0 } })
+        })
+      ).id,
+      alice
+    )
+    db.run(
+      'UPDATE intakes SET published_at = ?, last_notified_at = ?, next_notify_at = ? WHERE id = ?',
+      [
+        '2026-11-22T09:00:00.000Z',
+        '2026-11-22T09:00:00.000Z',
+        '2026-11-22T10:00:00.000Z',
+        closing.id
+      ]
+    )
+    db.run(
+      `INSERT INTO intake_digest_close (id, date_creation, nom, urgence, accord_acces)
+       VALUES (?, ?, ?, ?, ?)`,
+      ['0198f1a0-7b6c-7000-8000-000000000240', '2026-11-22T09:30:00.000Z', 'Avant', 'Normale', 0]
+    )
+    const closed = close_intake(closing.id, alice)
+    expect(closed.nextNotifyAt).toBe('2026-11-22T10:00:00.000Z')
+    expect(run_due_intake_digests(new Date('2026-11-22T10:00:00.000Z'))).toBe(1)
+    expect(get_intake(closing.id, alice)?.nextNotifyAt).toBeNull()
+    const reopened = reopen_intake(closing.id, alice)
+    expect(reopened.nextNotifyAt).toBeTruthy()
+
+    // 6. DST Europe/Paris: spring-forward 2026-03-29 02:30 skipped to 2026-03-30 02:30 CEST (00:30Z);
+    //    fall-back 2026-10-25 02:30 fires at 00:30Z CEST and schedules next at 01:30Z CET
     const dstDaily = publish_intake(
       create_intake(
         alice.email,
         baseBody({
           tableName: 'digest_dst',
-          config: baseConfig({ notifications: { mode: 'daily', hour: 2 } })
+          config: baseConfig({ notifications: { frequency: 'daily', hour: 2, minute: 30 } })
         })
       ).id,
       alice
     )
-    db.run('UPDATE intakes SET published_at = ?, last_notified_at = ? WHERE id = ?', [
-      '2026-03-28T20:00:00.000Z',
-      '2026-03-28T20:00:00.000Z',
-      dstDaily.id
-    ])
     db.run(
-      `INSERT INTO intake_digest_dst (id, date_creation, nom, urgence, accord_acces)
-       VALUES (?, ?, ?, ?, ?)`,
+      'UPDATE intakes SET published_at = ?, last_notified_at = ?, next_notify_at = ? WHERE id = ?',
       [
-        '0198f1a0-7b6c-7000-8000-000000000220',
-        '2026-03-28T22:00:00.000Z',
-        'Printemps',
-        'Normale',
-        0
+        '2026-03-28T01:00:00.000Z',
+        '2026-03-28T01:00:00.000Z',
+        '2026-03-28T01:30:00.000Z',
+        dstDaily.id
       ]
     )
-    // 00:00 UTC = 01:00 CET -> before 02:00 slot
-    expect(run_due_intake_digests(new Date('2026-03-29T00:00:00.000Z'))).toBe(0)
-    // 01:00 UTC = 03:00 CEST (02:00 skipped) -> fires once, not again at 04:00 CEST
-    expect(run_due_intake_digests(new Date('2026-03-29T01:00:00.000Z'))).toBe(1)
-    db.run(
-      `INSERT INTO intake_digest_dst (id, date_creation, nom, urgence, accord_acces)
-       VALUES (?, ?, ?, ?, ?)`,
-      ['0198f1a0-7b6c-7000-8000-000000000221', '2026-03-29T01:30:00.000Z', 'Apres', 'Normale', 0]
-    )
-    expect(run_due_intake_digests(new Date('2026-03-29T02:00:00.000Z'))).toBe(0)
+    // Firing on 2026-03-28 02:30 CET (01:30Z) skips nonexistent 2026-03-29 02:30 to 2026-03-30 02:30 CEST (00:30Z)
+    expect(run_due_intake_digests(new Date('2026-03-28T01:30:00.000Z'))).toBe(0)
+    expect(get_intake(dstDaily.id, alice)?.nextNotifyAt).toBe('2026-03-30T00:30:00.000Z')
 
-    // Fall-back: first 02:00 CEST (00:00 UTC) fires once; second 02:00 CET (01:00 UTC) does not
-    db.run('UPDATE intakes SET last_notified_at = ? WHERE id = ?', [
+    // Fall-back: 2026-10-25 02:30 occurs at 00:30Z (CEST) and 01:30Z (CET)
+    db.run('UPDATE intakes SET last_notified_at = ?, next_notify_at = ? WHERE id = ?', [
       '2026-10-24T20:00:00.000Z',
+      '2026-10-25T00:30:00.000Z',
       dstDaily.id
     ])
     db.run(
@@ -500,13 +658,15 @@ describe('intakes core lifecycle, permissions, validation, export, digests and k
        VALUES (?, ?, ?, ?, ?)`,
       ['0198f1a0-7b6c-7000-8000-000000000222', '2026-10-24T22:00:00.000Z', 'Automne', 'Normale', 0]
     )
-    expect(run_due_intake_digests(new Date('2026-10-25T00:00:00.000Z'))).toBe(1)
+    expect(run_due_intake_digests(new Date('2026-10-25T00:30:00.000Z'))).toBe(1)
+    expect(get_intake(dstDaily.id, alice)?.nextNotifyAt).toBe('2026-10-25T01:30:00.000Z')
     db.run(
       `INSERT INTO intake_digest_dst (id, date_creation, nom, urgence, accord_acces)
        VALUES (?, ?, ?, ?, ?)`,
-      ['0198f1a0-7b6c-7000-8000-000000000223', '2026-10-25T00:30:00.000Z', 'Bis', 'Normale', 0]
+      ['0198f1a0-7b6c-7000-8000-000000000223', '2026-10-25T00:45:00.000Z', 'Bis', 'Normale', 0]
     )
-    expect(run_due_intake_digests(new Date('2026-10-25T01:00:00.000Z'))).toBe(0)
+    expect(run_due_intake_digests(new Date('2026-10-25T01:30:00.000Z'))).toBe(1)
+    expect(get_intake(dstDaily.id, alice)?.nextNotifyAt).toBe('2026-10-26T01:30:00.000Z')
   })
 
   it('projects publishToKnowledge intakes without _files or PII and writes description into _readme', () => {
@@ -721,7 +881,7 @@ describe('intakes core lifecycle, permissions, validation, export, digests and k
       config: {
         ...plainTextIntake.config,
         access: { passwords: ['p1'] },
-        notifications: { mode: 'none' }
+        notifications: { frequency: 'none' }
       }
     })
     const afterNoopSource = findKnowledgeSourcesByFilename(

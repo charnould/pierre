@@ -5,8 +5,6 @@ import {
   type AutomationRecord,
   type AutomationRunStatus,
   type CreateAutomationBody,
-  decodeCronToSchedule,
-  encodeScheduleToCron,
   type PatchAutomationBody
 } from '../../../shared/automations'
 import type { UserPreferences } from '../../../shared/user-preferences'
@@ -20,11 +18,14 @@ import {
 } from '../collaborator-access'
 import { openDatastore } from '../datastore-db'
 import { formatMarkdown } from '../format-markdown'
+import { computeNextOccurrence, nextMinuteBoundary } from '../schedule'
 import { timezone } from '../setup-store'
 import { parseStoredUserPreferences, storedUserPreferences } from '../user-preferences-stored'
-import { compute_next_run_at } from './schedule'
-import { automation_schedule_error } from './schemas'
-import { parseStoredAutomationState, storedAutomationConfig } from './stored'
+import {
+  parseStoredAutomationState,
+  parseStoredRecurrenceSchedule,
+  storedAutomationConfig
+} from './stored'
 
 export class AutomationsError extends Error {
   constructor(
@@ -44,7 +45,7 @@ type AutomationDbRow = {
   status: string
   owner: string
   mentions: string
-  cron: string
+  schedule: string
   next_run_at: string | null
   last_run_at: string | null
   last_run_status: string | null
@@ -61,6 +62,7 @@ function row_to_record(row: AutomationDbRow, pinned = false): AutomationRecord {
     type: row.type,
     status: row.status,
     last_run_status: row.last_run_status,
+    schedule: JSON.parse(row.schedule),
     config: JSON.parse(row.config)
   })
   const record = {
@@ -70,7 +72,7 @@ function row_to_record(row: AutomationDbRow, pinned = false): AutomationRecord {
     status: state.status,
     owner: row.owner,
     mentions: parseMentionsJson(row.mentions),
-    cron: row.cron,
+    schedule: state.schedule,
     nextRunAt: row.next_run_at,
     lastRunAt: row.last_run_at,
     lastRunStatus: state.lastRunStatus,
@@ -184,21 +186,16 @@ export async function create_automation(
   owner: string,
   body: CreateAutomationBody
 ): Promise<AutomationRecord> {
-  const cron = encodeScheduleToCron({
-    frequency: body.frequency,
-    frequencyDay: body.frequencyDay,
-    frequencyTime: body.frequencyTime
-  })
   const config = { prompt: await formatMarkdown(body.prompt), maxReports: body.maxReports ?? 6 }
   const canonicalOwner = normalizeCollaboratorPrincipal(owner)
   const id = Bun.randomUUIDv7()
-  const next_run_at = compute_next_run_at(cron, timezone())
+  const next_run_at = computeNextOccurrence(body.schedule, timezone())
   {
     using db = openDatastore()
     const mentions = canonical_mentions(db, body.mentions ?? [])
     db.run(
       `INSERT INTO automations (
-         id, type, name, description, status, owner, mentions, cron,
+         id, type, name, description, status, owner, mentions, schedule,
          next_run_at, last_run_at, last_run_status, config
        ) VALUES (?, ?, ?, ?, 'scheduled', ?, ?, ?, ?, NULL, NULL, ?)`,
       [
@@ -208,7 +205,7 @@ export async function create_automation(
         body.description ?? '',
         canonicalOwner,
         JSON.stringify(mentions),
-        cron,
+        JSON.stringify(body.schedule),
         next_run_at,
         JSON.stringify(storedAutomationConfig(config))
       ]
@@ -231,21 +228,8 @@ export async function update_automation(
     throw new AutomationsError('Automation already running', 'conflict')
   }
 
-  const scheduleFromCron = decodeCronToSchedule(existing.cron)
-  const frequency = patch.frequency ?? scheduleFromCron.frequency
-  const frequencyDay =
-    patch.frequencyDay !== undefined ? patch.frequencyDay : scheduleFromCron.frequencyDay
-  const frequencyTime = patch.frequencyTime ?? scheduleFromCron.frequencyTime
-  const scheduleError = automation_schedule_error(frequency, frequencyDay)
-  if (scheduleError) throw new AutomationsError(scheduleError)
-  const scheduleChanged =
-    patch.frequency !== undefined ||
-    patch.frequencyDay !== undefined ||
-    patch.frequencyTime !== undefined
-
-  const cron = scheduleChanged
-    ? encodeScheduleToCron({ frequency, frequencyDay, frequencyTime })
-    : existing.cron
+  const schedule = patch.schedule ?? existing.schedule
+  const scheduleChanged = patch.schedule !== undefined
 
   let status = existing.status
   if (patch.status === 'paused') status = 'paused'
@@ -256,7 +240,7 @@ export async function update_automation(
   if (status === 'paused') {
     next_run_at = null
   } else if (status === 'scheduled' && (scheduleChanged || patch.status === 'scheduled')) {
-    next_run_at = compute_next_run_at(cron, timezone())
+    next_run_at = computeNextOccurrence(schedule, timezone())
   }
 
   const report = existing.config
@@ -274,7 +258,7 @@ export async function update_automation(
       const mentions = patch.mentions ? canonical_mentions(db, patch.mentions) : existing.mentions
       const updated = db.run(
         `UPDATE automations SET
-           name = ?, description = ?, status = ?, mentions = ?, cron = ?,
+           name = ?, description = ?, status = ?, mentions = ?, schedule = ?,
            next_run_at = ?, config = ?
          WHERE id = ? AND status <> 'running'`,
         [
@@ -282,7 +266,7 @@ export async function update_automation(
           patch.description ?? existing.description,
           status,
           JSON.stringify(mentions),
-          cron,
+          JSON.stringify(schedule),
           next_run_at,
           JSON.stringify(storedAutomationConfig(config)),
           id
@@ -457,17 +441,24 @@ export function finalize_automation_run(
         ) {
           return false
         }
-        const now = new Date().toISOString()
+        const now = new Date()
+        const nowIso = now.toISOString()
         const status: AutomationLifecycleStatus = options.restorePaused ? 'paused' : 'scheduled'
         const next_run_at =
-          status === 'scheduled' ? compute_next_run_at(row.cron, timezone(), new Date(now)) : null
+          status === 'scheduled'
+            ? computeNextOccurrence(
+                parseStoredRecurrenceSchedule(row.schedule),
+                timezone(),
+                nextMinuteBoundary(now)
+              )
+            : null
         return (
           db.run(
             `UPDATE automations SET
              status = ?, last_run_at = ?, last_run_status = ?, next_run_at = ?,
              run_token = NULL, lease_expires_at = NULL
            WHERE id = ? AND run_token = ?`,
-            [status, now, outcome, next_run_at, id, run_token]
+            [status, nowIso, outcome, next_run_at, id, run_token]
           ).changes > 0
         )
       })
@@ -484,16 +475,23 @@ export function stop_running_automation(id: string): void {
       .query<AutomationDbRow, [string]>('SELECT * FROM automations WHERE id = ? LIMIT 1')
       .get(id)
     if (!row || row.status !== 'running') return
-    const now = new Date().toISOString()
+    const now = new Date()
+    const nowIso = now.toISOString()
     const status: AutomationLifecycleStatus = row.next_run_at === null ? 'paused' : 'scheduled'
     const next_run_at =
-      status === 'scheduled' ? compute_next_run_at(row.cron, timezone(), new Date(now)) : null
+      status === 'scheduled'
+        ? computeNextOccurrence(
+            parseStoredRecurrenceSchedule(row.schedule),
+            timezone(),
+            nextMinuteBoundary(now)
+          )
+        : null
     db.run(
       `UPDATE automations SET
          status = ?, last_run_at = ?, last_run_status = 'error', next_run_at = ?,
          run_token = NULL, lease_expires_at = NULL
        WHERE id = ? AND status = 'running'`,
-      [status, now, next_run_at, id]
+      [status, nowIso, next_run_at, id]
     )
   }).immediate()
 }
