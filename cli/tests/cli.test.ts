@@ -283,7 +283,7 @@ describe('configuration parsing', () => {
       publicChatPerMinute: '600',
       smolvmMaxActive: '96',
       smolvmPoolSize: '4',
-      smolvmCpus: '1',
+      smolvmCpus: '2',
       smolvmMemoryMib: '512'
     })
   })

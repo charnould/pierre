@@ -126,7 +126,7 @@ export function mergeConfiguration(current: EnvMap, flags: ConfigureFlags): Merg
   const publicChatPerMinute = current.PUBLIC_CHAT_PER_MINUTE || '600'
   const smolvmMaxActive = current.SMOLVM_MAX_ACTIVE || '96'
   const smolvmPoolSize = current.SMOLVM_POOL_SIZE || '4'
-  const smolvmCpus = current.SMOLVM_CPUS || '1'
+  const smolvmCpus = current.SMOLVM_CPUS || '2'
   const smolvmMemoryMib = current.SMOLVM_MEMORY_MIB || '512'
   const positive = [publicChatPerMinute, smolvmMaxActive, smolvmCpus, smolvmMemoryMib]
   if (!positive.every((value) => /^\d+$/.test(value) && Number(value) > 0)) {
