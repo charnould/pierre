@@ -50,8 +50,7 @@ const reportBody = {
   name: 'Rapport impayés',
   description: 'Synthèse',
   mentions: ['bob'],
-  frequency: 'daily',
-  frequencyTime: '08:30',
+  schedule: { frequency: 'daily', hour: 8, minute: 30 },
   prompt: '# Faire une synthèse',
   maxReports: 3
 }
@@ -175,7 +174,7 @@ describe('automation route classes', () => {
   it('returns stable errors for malformed and missing resources', async () => {
     const invalid = await app.request(
       '/automations',
-      request('POST', { ...reportBody, frequencyTime: '25:00' })
+      request('POST', { ...reportBody, schedule: { frequency: 'daily', hour: 25, minute: 0 } })
     )
     expect(invalid.status).toBe(400)
     expect(await invalid.json()).toMatchObject({ error: { code: 'invalid_body' } })

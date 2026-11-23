@@ -41,7 +41,7 @@ const sampleBody = (overrides: Partial<CreateIntakeBody> = {}): CreateIntakeBody
       ]
     },
     access: { passwords: ['secret-2026'] },
-    notifications: { mode: 'none' }
+    notifications: { frequency: 'none' }
   },
   ...overrides
 })
@@ -351,7 +351,7 @@ describe('intakes authenticated and public routes', () => {
                   ]
                 },
                 access: { passwords: [] },
-                notifications: { mode: 'none' }
+                notifications: { frequency: 'none' }
               }
             })
           )

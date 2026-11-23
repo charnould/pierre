@@ -3,6 +3,7 @@ import { Database } from 'bun:sqlite'
 import {
   type CreateIntakeBody,
   type IntakeConfig,
+  type IntakeNotificationSchedule,
   type IntakeRecord,
   intakeStatusFromDates,
   intakeTableName,
@@ -10,6 +11,7 @@ import {
   type PatchIntakeBody,
   validateIntakeTableName
 } from '../../../shared/intakes'
+import { isRecurrenceSchedule } from '../../../shared/schedule'
 import {
   canManageCollaboratorResource,
   canonicalMentions,
@@ -19,6 +21,8 @@ import {
   parseMentionsJson
 } from '../collaborator-access'
 import { openDatastore } from '../datastore-db'
+import { computeNextOccurrence } from '../schedule'
+import { timezone } from '../setup-store'
 import { IntakesError } from './errors'
 import {
   removeIntakeKnowledgeInDb,
@@ -55,6 +59,16 @@ export type IntakeDbRow = {
   published_at: string | null
   closed_at: string | null
   last_notified_at: string | null
+  next_notify_at: string | null
+}
+
+function computeIntakeNextNotifyAt(
+  notifications: IntakeNotificationSchedule,
+  now: Date
+): string | null {
+  return isRecurrenceSchedule(notifications)
+    ? computeNextOccurrence(notifications, timezone(), now)
+    : null
 }
 
 export type PublicIntake = Pick<
@@ -90,6 +104,7 @@ function rowToRecord(db: Database, row: IntakeDbRow): IntakeRecord {
     publishedAt: row.published_at,
     closedAt: row.closed_at,
     lastNotifiedAt: row.last_notified_at,
+    nextNotifyAt: row.next_notify_at,
     submissionCount: stats.count,
     lastSubmissionAt: stats.lastSubmissionAt,
     lockedColumns
@@ -219,8 +234,8 @@ export function create_intake(owner: string, body: CreateIntakeBody): IntakeReco
           `INSERT INTO intakes (
              id, name, description, table_name, publish_to_knowledge,
              owner, mentions, token, config, created_at,
-             published_at, closed_at, last_notified_at
-           ) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, NULL, NULL, NULL)
+             published_at, closed_at, last_notified_at, next_notify_at
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, NULL, NULL, NULL, NULL)
            RETURNING *`
         )
         .get(
@@ -292,13 +307,28 @@ export function update_intake(
         ? canonicalMentions(db, patch.mentions, (message) => new IntakesError(message, 'invalid'))
         : parseMentionsJson(existing.mentions)
 
-    const prevMode = prevConfig.notifications.mode
-    const nextMode = nextConfig.notifications.mode
-    const enteringDigest =
-      (nextMode === 'hourly' || nextMode === 'daily') &&
-      prevMode !== 'hourly' &&
-      prevMode !== 'daily'
-    const nextLastNotifiedAt = enteringDigest ? new Date().toISOString() : existing.last_notified_at
+    const now = new Date()
+    const nowIso = now.toISOString()
+    const wasRecurring = isRecurrenceSchedule(prevConfig.notifications)
+    const isRecurring = isRecurrenceSchedule(nextConfig.notifications)
+    const notifChanged =
+      JSON.stringify(prevConfig.notifications) !== JSON.stringify(nextConfig.notifications)
+    const nextLastNotifiedAt =
+      isPublished && !wasRecurring && isRecurring ? nowIso : existing.last_notified_at
+
+    let nextNotifyAt: string | null = null
+    if (isPublished && isRecurring) {
+      if (existing.closed_at === null) {
+        nextNotifyAt =
+          notifChanged || existing.next_notify_at === null
+            ? computeIntakeNextNotifyAt(nextConfig.notifications, now)
+            : existing.next_notify_at
+      } else if (existing.next_notify_at !== null) {
+        nextNotifyAt = notifChanged
+          ? computeIntakeNextNotifyAt(nextConfig.notifications, now)
+          : existing.next_notify_at
+      }
+    }
 
     let nextColumnTypes = existingColumnTypes
     if (isPublished && addedFields.length > 0) {
@@ -313,11 +343,22 @@ export function update_intake(
     const updated = db
       .query<
         IntakeDbRow,
-        [string, string, string, number, string, string, string, string | null, string]
+        [
+          string,
+          string,
+          string,
+          number,
+          string,
+          string,
+          string,
+          string | null,
+          string | null,
+          string
+        ]
       >(
         `UPDATE intakes
          SET name = ?, description = ?, table_name = ?, publish_to_knowledge = ?,
-             mentions = ?, config = ?, column_types = ?, last_notified_at = ?
+             mentions = ?, config = ?, column_types = ?, last_notified_at = ?, next_notify_at = ?
          WHERE id = ?
          RETURNING *`
       )
@@ -330,6 +371,7 @@ export function update_intake(
         JSON.stringify(nextConfig),
         JSON.stringify(nextColumnTypes),
         nextLastNotifiedAt,
+        nextNotifyAt,
         id
       )!
 
@@ -362,16 +404,18 @@ export function publish_intake(id: string, actor: CollaboratorActor): IntakeReco
 
     createIntakeTable(db, existing.table_name, config.form.fields)
     const token = crypto.randomUUID()
-    const now = new Date().toISOString()
+    const now = new Date()
+    const nowIso = now.toISOString()
+    const nextNotifyAt = computeIntakeNextNotifyAt(config.notifications, now)
 
     const published = db
-      .query<IntakeDbRow, [string, string, string, string, string]>(
+      .query<IntakeDbRow, [string, string, string, string | null, string, string]>(
         `UPDATE intakes
-         SET token = ?, published_at = ?, last_notified_at = ?, column_types = ?
+         SET token = ?, published_at = ?, last_notified_at = ?, next_notify_at = ?, column_types = ?
          WHERE id = ?
          RETURNING *`
       )
-      .get(token, now, now, JSON.stringify(columnTypes), id)!
+      .get(token, nowIso, nowIso, nextNotifyAt, JSON.stringify(columnTypes), id)!
 
     if (published.publish_to_knowledge === 1) {
       syncIntakeKnowledgeRowInDb(db, published)
@@ -415,9 +459,14 @@ export function reopen_intake(id: string, actor: CollaboratorActor): IntakeRecor
     if (existing.published_at === null || existing.closed_at === null) {
       throw new IntakesError('Cette collecte n’est pas clôturée', 'conflict')
     }
+    const config = parseStoredIntakeConfig(existing.config)
+    const nextNotifyAt =
+      existing.next_notify_at ?? computeIntakeNextNotifyAt(config.notifications, new Date())
     const updated = db
-      .query<IntakeDbRow, [string]>('UPDATE intakes SET closed_at = NULL WHERE id = ? RETURNING *')
-      .get(id)!
+      .query<IntakeDbRow, [string | null, string]>(
+        'UPDATE intakes SET closed_at = NULL, next_notify_at = ? WHERE id = ? RETURNING *'
+      )
+      .get(nextNotifyAt, id)!
     return rowToRecord(db, updated)
   })
 }

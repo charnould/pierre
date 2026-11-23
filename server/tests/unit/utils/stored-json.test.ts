@@ -52,12 +52,14 @@ describe('stored JSON', () => {
         type: 'report',
         status: 'scheduled',
         last_run_status: null,
+        schedule: { frequency: 'weekly', days: [1], hour: 8, minute: 0 },
         config: stored
       })
     ).toMatchObject({
       type: 'report',
       status: 'scheduled',
       lastRunStatus: null,
+      schedule: { frequency: 'weekly', days: [1], hour: 8, minute: 0 },
       config: { prompt: 'Impayés', maxReports: 4 }
     })
     expect(() =>
@@ -65,6 +67,7 @@ describe('stored JSON', () => {
         type: 'replies',
         status: 'scheduled',
         last_run_status: null,
+        schedule: { frequency: 'weekly', days: [1], hour: 8, minute: 0 },
         config: stored
       })
     ).toThrow()

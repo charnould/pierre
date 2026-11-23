@@ -134,7 +134,8 @@ CREATE TABLE intakes (
   created_at TEXT NOT NULL,
   published_at TEXT,
   closed_at TEXT,
-  last_notified_at TEXT
+  last_notified_at TEXT,
+  next_notify_at TEXT
 ) STRICT;
 
 -- Activities & communications
@@ -250,7 +251,7 @@ CREATE TABLE automations (
   status TEXT NOT NULL,
   owner TEXT NOT NULL,
   mentions TEXT NOT NULL DEFAULT '[]',
-  cron TEXT NOT NULL,
+  schedule TEXT NOT NULL CHECK (json_valid(schedule) AND json_type(schedule) = 'object'),
   next_run_at TEXT,
   last_run_at TEXT,
   last_run_status TEXT,

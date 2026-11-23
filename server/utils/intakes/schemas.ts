@@ -1,4 +1,4 @@
-import { z } from 'zod/v4'
+import { z } from 'zod'
 
 import {
   INTAKE_ALLOWED_MIMES,
@@ -13,6 +13,7 @@ import {
   isIntakeInputField,
   isReservedIntakeColumn
 } from '../../../shared/intakes'
+import { IntakeNotificationScheduleSchema } from '../schedule'
 
 const NonEmptyTrimmed = z.string().trim().min(1)
 
@@ -101,18 +102,6 @@ export const IntakeFieldSchema = z.discriminatedUnion('type', [
   FileFieldSchema
 ])
 
-export const IntakeNotificationsSchema = z.discriminatedUnion('mode', [
-  z.object({ mode: z.literal('none') }).strict(),
-  z.object({ mode: z.literal('immediate') }).strict(),
-  z.object({ mode: z.literal('hourly') }).strict(),
-  z
-    .object({
-      mode: z.literal('daily'),
-      hour: z.number().int().min(0).max(23).default(18)
-    })
-    .strict()
-])
-
 export const IntakeConfigSchema = z
   .object({
     form: z
@@ -129,7 +118,7 @@ export const IntakeConfigSchema = z
       })
       .strict()
       .default({ passwords: [] }),
-    notifications: IntakeNotificationsSchema.default({ mode: 'immediate' })
+    notifications: IntakeNotificationScheduleSchema.default({ frequency: 'immediate' })
   })
   .strict()
   .superRefine((config, ctx) => {

@@ -84,7 +84,7 @@ if (command) {
   Bun.cron('* * * * *', async () => {
     await run_due_automations()
   })
-  Bun.cron('0 * * * *', () => {
+  Bun.cron('* * * * *', () => {
     run_due_intake_digests()
   })
   const { createApp } = await import('./app')

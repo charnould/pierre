@@ -5,15 +5,15 @@ import type { IntakeSubmittedContent, IntakeSubmittedFile } from '../../../share
 import {
   type IntakeField,
   intakeFieldColumnName,
-  type IntakeNotificationsConfig,
   type IntakeRecord,
   intakeTableName,
   isIntakeInputField
 } from '../../../shared/intakes'
-import { type ZonedDateParts, zonedDateParts } from '../../../shared/zoned-date'
+import { isRecurrenceSchedule } from '../../../shared/schedule'
 import { create_trusted_activity } from '../activities/write'
 import { notificationRecipients, parseMentionsJson } from '../collaborator-access'
 import { openDatastore } from '../datastore-db'
+import { computeNextOccurrence, nextMinuteBoundary } from '../schedule'
 import { timezone } from '../setup-store'
 import { manifestToSubmittedFiles, parseIntakeFilesEnvelope } from './files'
 import { parseStoredIntakeConfig } from './schemas'
@@ -94,27 +94,8 @@ export function notifyImmediateIntakeSubmission(
   submission: SubmittedRowSummary,
   db?: Database
 ): void {
-  if (intake.config.notifications.mode !== 'immediate') return
+  if (intake.config.notifications.frequency !== 'immediate') return
   emitIntakeActivity(intake, buildSingleSubmissionContent(intake.name, submission), db)
-}
-
-function civilDayKey(parts: ZonedDateParts): number {
-  return parts.year * 10_000 + parts.month * 100 + parts.day
-}
-
-function isDigestDue(
-  notifications: IntakeNotificationsConfig,
-  cursor: string,
-  localNow: ZonedDateParts,
-  zone: string
-): boolean {
-  if (notifications.mode === 'hourly') return true
-  if (notifications.mode !== 'daily') return false
-  if (localNow.hour < notifications.hour) return false
-  const localCursor = zonedDateParts(new Date(cursor), zone)
-  const cursorDay = civilDayKey(localCursor)
-  const today = civilDayKey(localNow)
-  return cursorDay < today || (cursorDay === today && localCursor.hour < notifications.hour)
 }
 
 function formatPeriodDate(iso: string, timeZone: string): string {
@@ -163,29 +144,29 @@ type DigestIntakeRow = {
   mentions: string
   config: string
   published_at: string
+  closed_at: string | null
   last_notified_at: string | null
 }
 
 /**
- * Hourly cron job (`0 * * * *`) emitting `hourly` and `daily` intake notification digests.
- * Restart-resilient: for `daily`, fires once per day when local hour >= configured `hour` and
- * `COALESCE(last_notified_at, published_at)` is strictly before today's `hour:00` in `timezone()`.
+ * Minute cron job (`* * * * *`) emitting scheduled intake notification digests.
+ * Uses persisted `next_notify_at` (same recurrence engine as automations) and advances
+ * strictly to `nextMinuteBoundary(now)` so a slot never fires twice.
  */
 export function run_due_intake_digests(now: Date = new Date()): number {
   const zone = timezone()
-
   const nowIso = now.toISOString()
-  const localNow = zonedDateParts(now, zone)
   using db = openDatastore()
   let emitted = 0
 
   const candidateIds = db
-    .query<{ id: string }, []>(
+    .query<{ id: string }, [string]>(
       `SELECT id FROM intakes
        WHERE published_at IS NOT NULL
-         AND json_extract(config, '$.notifications.mode') IN ('hourly', 'daily')`
+         AND next_notify_at IS NOT NULL
+         AND next_notify_at <= ?`
     )
-    .all()
+    .all(nowIso)
     .map((row) => row.id)
 
   for (const intakeId of candidateIds) {
@@ -193,20 +174,31 @@ export function run_due_intake_digests(now: Date = new Date()): number {
       const didEmit = db
         .transaction(() => {
           const row = db
-            .query<DigestIntakeRow, [string]>(
-              `SELECT id, name, table_name, owner, mentions, config, published_at, last_notified_at
+            .query<DigestIntakeRow, [string, string]>(
+              `SELECT id, name, table_name, owner, mentions, config, published_at, closed_at, last_notified_at
                FROM intakes
-               WHERE id = ? AND published_at IS NOT NULL
+               WHERE id = ?
+                 AND published_at IS NOT NULL
+                 AND next_notify_at IS NOT NULL
+                 AND next_notify_at <= ?
                LIMIT 1`
             )
-            .get(intakeId)
+            .get(intakeId, nowIso)
           if (!row) return false
 
           const config = parseStoredIntakeConfig(row.config)
           const notif = config.notifications
-          const cursor = row.last_notified_at ?? row.published_at
-          if (!isDigestDue(notif, cursor, localNow, zone)) return false
+          if (!isRecurrenceSchedule(notif)) {
+            db.run('UPDATE intakes SET next_notify_at = NULL WHERE id = ?', [row.id])
+            return false
+          }
 
+          const nextNotifyAt =
+            row.closed_at !== null
+              ? null
+              : computeNextOccurrence(notif, zone, nextMinuteBoundary(now))
+
+          const cursor = row.last_notified_at ?? row.published_at
           const physical = quoteSqlIdent(intakeTableName(row.table_name))
           const stats = db
             .query<
@@ -229,9 +221,7 @@ export function run_due_intake_digests(now: Date = new Date()): number {
 
           const count = Number(stats?.count ?? 0)
           if (count === 0 || !stats?.last_at) {
-            if (notif.mode === 'daily' && nowIso > cursor) {
-              db.run('UPDATE intakes SET last_notified_at = ? WHERE id = ?', [nowIso, row.id])
-            }
+            db.run('UPDATE intakes SET next_notify_at = ? WHERE id = ?', [nextNotifyAt, row.id])
             return false
           }
 
@@ -264,7 +254,11 @@ export function run_due_intake_digests(now: Date = new Date()): number {
           }
 
           if (content) emitIntakeActivity(intakeRef, content, db)
-          db.run('UPDATE intakes SET last_notified_at = ? WHERE id = ?', [nextCursor, row.id])
+          db.run('UPDATE intakes SET last_notified_at = ?, next_notify_at = ? WHERE id = ?', [
+            nextCursor,
+            nextNotifyAt,
+            row.id
+          ])
           return content !== null
         })
         .immediate()
