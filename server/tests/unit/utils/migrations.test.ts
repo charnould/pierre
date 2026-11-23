@@ -7,9 +7,9 @@ import {
   type DatastoreMigration,
   DatastoreVersionError,
   migrate_datastore
-} from '../../../utils/datastore-migrations'
+} from '../../../utils/migrations'
 
-const ROOT = 'datastores/_test_datastore_migrations'
+const ROOT = 'datastores/_test_migrations'
 const PATH = `${ROOT}/datastore.sqlite`
 
 const open = (): Database => new Database(PATH)
@@ -47,10 +47,7 @@ describe('datastore migrations', () => {
           'SELECT version, name FROM schema_migrations ORDER BY version'
         )
         .all()
-    ).toEqual([
-      { version: 1, name: 'baseline' },
-      { version: 2, name: 'intakes' }
-    ])
+    ).toEqual([{ version: 1, name: 'baseline' }])
     expect(
       db
         .query<{ n: number }, []>("SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'setup'")
@@ -85,13 +82,12 @@ describe('datastore migrations', () => {
            'user_profiles',
            'users',
            'verification',
-           'idx_activites_execution',
-           'idx_activites_id_externe',
-           'idx_activites_inbound_thread',
-           'idx_activites_task_thread',
-           'idx_automations_stuck',
-           'idx_communication_provider_operations_reconcile',
-           'idx_contacts_stale_sms'
+           'idx_activites_locataire',
+           'idx_activites_rattachement',
+           'idx_activites_type',
+           'idx_bulk_jobs_due',
+           'idx_conversations_updated_at',
+           'idx_llm_runs_started_at'
          )
          ORDER BY name`
       )
@@ -108,13 +104,12 @@ describe('datastore migrations', () => {
       'communication_provider_operations',
       'contacts',
       'conversations',
-      'idx_activites_execution',
-      'idx_activites_id_externe',
-      'idx_activites_inbound_thread',
-      'idx_activites_task_thread',
-      'idx_automations_stuck',
-      'idx_communication_provider_operations_reconcile',
-      'idx_contacts_stale_sms',
+      'idx_activites_locataire',
+      'idx_activites_rattachement',
+      'idx_activites_type',
+      'idx_bulk_jobs_due',
+      'idx_conversations_updated_at',
+      'idx_llm_runs_started_at',
       'intakes',
       'knowledge_records',
       'llm_runs',
@@ -127,6 +122,27 @@ describe('datastore migrations', () => {
     expect(
       ['account', 'session', 'users', 'verification'].every((name) => objects.includes(name))
     ).toBe(true)
+
+    const explicitIndexes = db
+      .query<{ name: string }, []>(
+        `SELECT name FROM sqlite_master
+         WHERE type = 'index' AND sql IS NOT NULL
+         ORDER BY name`
+      )
+      .all()
+      .map((row) => row.name)
+    expect(explicitIndexes).toEqual([
+      'idx_activites_idempotency',
+      'idx_activites_locataire',
+      'idx_activites_rattachement',
+      'idx_activites_repayment_plan_snapshot',
+      'idx_activites_type',
+      'idx_bulk_jobs_due',
+      'idx_conversations_updated_at',
+      'idx_knowledge_records_active_build',
+      'idx_knowledge_records_source_sheet',
+      'idx_llm_runs_started_at'
+    ])
 
     const userColumns = db
       .query<{ name: string }, []>('PRAGMA table_info(users)')
@@ -220,7 +236,7 @@ describe('datastore migrations', () => {
   it('does not rebuild a hand-dropped application index', async () => {
     await migrate_datastore(PATH)
     const damaged = open()
-    damaged.run('DROP INDEX idx_activites_execution')
+    damaged.run('DROP INDEX idx_activites_type')
     damaged.close()
 
     await migrate_datastore(PATH)
@@ -230,7 +246,7 @@ describe('datastore migrations', () => {
       db
         .query<{ n: number }, []>(
           `SELECT COUNT(*) AS n FROM sqlite_master
-           WHERE type = 'index' AND name = 'idx_activites_execution'`
+           WHERE type = 'index' AND name = 'idx_activites_type'`
         )
         .get()?.n
     ).toBe(0)
@@ -340,7 +356,9 @@ describe('datastore migrations', () => {
     seeded.run('DROP TABLE communication_dispatch_claims')
     seeded.run('DROP TABLE communication_provider_operations')
     seeded.run('DROP TABLE activites')
+    seeded.run('DROP TABLE bulk_jobs')
     seeded.run('DROP TABLE conversations')
+    seeded.run('DROP TABLE llm_runs')
     seeded.close()
 
     await migrate_datastore(PATH, migrations)
@@ -358,11 +376,17 @@ describe('datastore migrations', () => {
         `SELECT name FROM sqlite_master
          WHERE name IN (
            'activites',
+           'bulk_jobs',
            'communication_dispatch_claims',
            'communication_provider_operations',
            'conversations',
-           'idx_activites_execution',
+           'llm_runs',
+           'idx_activites_locataire',
+           'idx_activites_rattachement',
+           'idx_activites_type',
+           'idx_bulk_jobs_due',
            'idx_conversations_updated_at',
+           'idx_llm_runs_started_at',
            'activites_no_update',
            'activites_no_delete'
          )
@@ -374,11 +398,17 @@ describe('datastore migrations', () => {
       'activites',
       'activites_no_delete',
       'activites_no_update',
+      'bulk_jobs',
       'communication_dispatch_claims',
       'communication_provider_operations',
       'conversations',
-      'idx_activites_execution',
-      'idx_conversations_updated_at'
+      'idx_activites_locataire',
+      'idx_activites_rattachement',
+      'idx_activites_type',
+      'idx_bulk_jobs_due',
+      'idx_conversations_updated_at',
+      'idx_llm_runs_started_at',
+      'llm_runs'
     ])
   })
 })

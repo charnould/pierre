@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import { mkdir, rm } from 'node:fs/promises'
 
 import { openDatastore } from '../../../utils/datastore-db'
-import { migrate_datastore } from '../../../utils/datastore-migrations'
+import { migrate_datastore } from '../../../utils/migrations'
 import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import {
   anyChatbotReady,

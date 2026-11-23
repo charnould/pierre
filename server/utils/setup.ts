@@ -1,7 +1,7 @@
 import { mkdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 
-import { migrate_datastore } from './datastore-migrations'
+import { migrate_datastore } from './migrations'
 import { datastorePaths } from './paths'
 
 /**

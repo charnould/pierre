@@ -2,7 +2,6 @@ import { Database } from 'bun:sqlite'
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import { mkdir, rm } from 'node:fs/promises'
 
-import { migrate_datastore } from '../../../utils/datastore-migrations'
 import {
   completeKnowledgeBuild,
   createKnowledgeBuild,
@@ -18,6 +17,7 @@ import {
   purgeOldKnowledgeBuilds,
   updateKnowledgeSourceMetadata
 } from '../../../utils/knowledge/catalog'
+import { migrate_datastore } from '../../../utils/migrations'
 import { datastorePaths, setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 
 const paths = testDatastorePaths('knowledge_catalog')

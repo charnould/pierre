@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'bun:test'
 import { mkdir, rm } from 'node:fs/promises'
 
 import { openDatastore } from '../../../utils/datastore-db'
-import { migrate_datastore } from '../../../utils/datastore-migrations'
+import { migrate_datastore } from '../../../utils/migrations'
 import { datastorePaths, setDatastoreRoot } from '../../../utils/paths'
 
 const root = 'datastores/_test_datastore_db'
@@ -23,6 +23,10 @@ describe('openDatastore', () => {
     expect(db.query<{ foreign_keys: number }, []>('PRAGMA foreign_keys').get()?.foreign_keys).toBe(
       1
     )
+    expect(db.query<{ journal_mode: string }, []>('PRAGMA journal_mode').get()?.journal_mode).toBe(
+      'wal'
+    )
+    expect(db.query<{ synchronous: number }, []>('PRAGMA synchronous').get()?.synchronous).toBe(1)
     db.run(
       `INSERT INTO users
          (id, name, email, emailVerified, createdAt, updatedAt)

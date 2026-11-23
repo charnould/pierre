@@ -11,9 +11,9 @@ import {
   compile_query,
   execute_query
 } from '../../../../utils/bulk/query'
-import { migrate_datastore } from '../../../../utils/datastore-migrations'
 import type { LedgerColumnMeta } from '../../../../utils/ledger/schema'
 import { build_ledger_view_sql } from '../../../../utils/ledger/view'
+import { migrate_datastore } from '../../../../utils/migrations'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
 import { seedInstanceSetup } from '../../../seed-setup'
 

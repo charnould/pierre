@@ -6,12 +6,12 @@ import * as XLSX from 'xlsx'
 
 import type { BusinessModuleId } from '../../../../shared/modules'
 import { FIELDS } from '../../../utils/carl'
-import { migrate_datastore } from '../../../utils/datastore-migrations'
 import { CORE_DATA_CONTRACT } from '../../../utils/datastore-tables'
 import { create_intake, publish_intake } from '../../../utils/intakes/store'
 import { updateKnowledgeSourceMetadata } from '../../../utils/knowledge/catalog'
 import { importKnowledgeFiles } from '../../../utils/knowledge/import-files'
 import { runKnowledgePipeline } from '../../../utils/knowledge/run-pipeline'
+import { migrate_datastore } from '../../../utils/migrations'
 import { datastorePaths, setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import { seedInstanceSetup } from '../../seed-setup'
 

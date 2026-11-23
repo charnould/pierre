@@ -81,10 +81,10 @@ describe('activites schema', () => {
       .all()
       .map((row) => row.name)
     db.close()
-    expect(indexes).toContain('idx_activites_task_thread')
-    expect(indexes).toContain('idx_activites_inbound_thread')
+    expect(indexes).toContain('idx_activites_rattachement')
+    expect(indexes).toContain('idx_activites_locataire')
+    expect(indexes).toContain('idx_activites_type')
     expect(indexes).toContain('idx_activites_idempotency')
-    expect(indexes).toContain('idx_activites_repayment_plan_thread')
     expect(indexes).toContain('idx_activites_repayment_plan_snapshot')
   })
 

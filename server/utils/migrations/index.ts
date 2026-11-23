@@ -2,7 +2,6 @@ import { Database } from 'bun:sqlite'
 
 import { openDatastore } from '../datastore-db'
 import baselineSql from './000.sql' with { type: 'text' }
-import intakesSql from './001.sql' with { type: 'text' }
 
 export type DatastoreMigration = {
   version: number
@@ -11,8 +10,7 @@ export type DatastoreMigration = {
 }
 
 export const APP_MIGRATIONS: readonly DatastoreMigration[] = [
-  { version: 1, name: 'baseline', sql: baselineSql },
-  { version: 2, name: 'intakes', sql: intakesSql }
+  { version: 1, name: 'baseline', sql: baselineSql }
 ]
 
 const SCHEMA_MIGRATIONS_SQL = `
@@ -20,7 +18,7 @@ const SCHEMA_MIGRATIONS_SQL = `
     version INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
     applied_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
-  )
+  ) STRICT
 `
 
 const MANUAL_REPAIR = 'Add a migration or delete the datastore file manually.'
@@ -108,6 +106,7 @@ const recreate_missing_tables = (db: Database, migrations: readonly DatastoreMig
 const bootstrap = (path: string, migrations: readonly DatastoreMigration[]): number[] => {
   const db = openDatastore({ path, create: true })
   try {
+    db.run('PRAGMA journal_mode = WAL')
     db.run(SCHEMA_MIGRATIONS_SQL)
     return apply(db, migrations)
   } finally {
