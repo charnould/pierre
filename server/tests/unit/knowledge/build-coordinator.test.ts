@@ -8,15 +8,17 @@ import {
   initializeKnowledgeBuildCoordinator,
   requestKnowledgeBuild
 } from '../../../utils/knowledge/build-coordinator'
+import { importKnowledgeFiles } from '../../../utils/knowledge/import-files'
 import {
   createKnowledgeBuild,
   failInterruptedKnowledgeBuilds,
   getKnowledgeBuild,
+  listKnowledgeBuilds
+} from '../../../utils/knowledge/knowledge-builds'
+import {
   getKnowledgeCatalogSnapshot,
-  listKnowledgeBuilds,
   updateKnowledgeSourceMetadata
-} from '../../../utils/knowledge/catalog'
-import { importKnowledgeFiles } from '../../../utils/knowledge/import-files'
+} from '../../../utils/knowledge/knowledge-sources'
 import { migrate_datastore } from '../../../utils/migrations'
 import { datastorePaths, setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import { seedInstanceSetup } from '../../seed-setup'

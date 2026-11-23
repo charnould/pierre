@@ -10,22 +10,24 @@ import {
 import type { AuthContext } from '../../utils/authenticate-user'
 import { requestKnowledgeBuild } from '../../utils/knowledge/build-coordinator'
 import {
-  deleteKnowledgeSource,
-  getKnowledgeCatalogSnapshot,
-  getKnowledgeSource,
   KnowledgeModuleIdsSchema,
   KnowledgeProfileIdsSchema,
-  type KnowledgeSource,
-  KnowledgeSourceError,
-  listKnowledgeBuilds,
-  updateKnowledgeSourceMetadata
-} from '../../utils/knowledge/catalog'
+  type KnowledgeSource
+} from '../../utils/knowledge/catalog-schema'
 import {
   importKnowledgeFiles,
   inferKnowledgeFileType,
   KnowledgeImportError
 } from '../../utils/knowledge/import-files'
 import { KnowledgeCsvError } from '../../utils/knowledge/ingest-files'
+import { listKnowledgeBuilds } from '../../utils/knowledge/knowledge-builds'
+import {
+  deleteKnowledgeSource,
+  getKnowledgeCatalogSnapshot,
+  getKnowledgeSource,
+  KnowledgeSourceError,
+  updateKnowledgeSourceMetadata
+} from '../../utils/knowledge/knowledge-sources'
 import { inspectWorkbook, KnowledgeUploadError } from '../../utils/knowledge/parse-upload'
 import { listKnowledgeProfiles } from '../../utils/knowledge/profiles'
 

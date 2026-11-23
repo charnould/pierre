@@ -11,14 +11,12 @@ import {
   assertNoOutputCollisions,
   assignedKnowledgeItemKeys,
   coreDataFingerprint,
-  getKnowledgeCatalogSnapshot,
-  type KnowledgeDiagnostic,
-  type KnowledgeProjection,
   knowledgeProjections,
-  listKnowledgeBuilds,
-  listKnowledgeSourceContents,
   profileBuildFingerprint
-} from './catalog'
+} from './catalog-rules'
+import type { KnowledgeDiagnostic, KnowledgeProjection } from './catalog-schema'
+import { listKnowledgeBuilds } from './knowledge-builds'
+import { getKnowledgeCatalogSnapshot, listKnowledgeSourceContents } from './knowledge-sources'
 import { writeProfileFiles } from './profile-files'
 import { listKnowledgeProfiles } from './profiles'
 import {

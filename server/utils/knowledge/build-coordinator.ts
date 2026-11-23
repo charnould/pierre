@@ -2,19 +2,17 @@ import { readdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import { datastorePaths } from '../paths'
+import type { KnowledgeBuild, KnowledgeBuildTrigger, KnowledgeDiagnostic } from './catalog-schema'
 import {
   completeKnowledgeBuild,
   createKnowledgeBuild,
   failInterruptedKnowledgeBuilds,
   getActiveKnowledgeBuild,
   getKnowledgeBuild,
-  type KnowledgeBuild,
-  type KnowledgeBuildTrigger,
-  type KnowledgeDiagnostic,
   listKnowledgeBuilds,
   purgeOldKnowledgeBuilds,
   updateKnowledgeBuild
-} from './catalog'
+} from './knowledge-builds'
 import {
   KnowledgeCatalogChangedError,
   KnowledgePipelineError,

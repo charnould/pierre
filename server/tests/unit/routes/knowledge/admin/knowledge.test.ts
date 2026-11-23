@@ -21,9 +21,9 @@ import * as markdownFormatter from '../../../../../utils/format-markdown'
 import * as buildCoordinator from '../../../../../utils/knowledge/build-coordinator'
 import {
   completeKnowledgeBuild,
-  createKnowledgeBuild,
-  getKnowledgeCatalogSnapshot
-} from '../../../../../utils/knowledge/catalog'
+  createKnowledgeBuild
+} from '../../../../../utils/knowledge/knowledge-builds'
+import { getKnowledgeCatalogSnapshot } from '../../../../../utils/knowledge/knowledge-sources'
 import { datastorePaths, setDatastoreRoot, testDatastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
 import { seedInstanceSetup } from '../../../../seed-setup'
