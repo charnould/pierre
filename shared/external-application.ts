@@ -1,7 +1,7 @@
 const VARIABLE_PATTERN = /\{\{\s*([^{}]+?)\s*\}\}/g
 const DENIED_PROTOCOLS = new Set(['file:', 'javascript:', 'data:'])
 
-export type ExternalApplicationTransport = 'browser' | 'external'
+type ExternalApplicationTransport = 'browser' | 'external'
 
 export type ExternalApplication = {
   name: string
@@ -22,7 +22,7 @@ function cellText(row: Record<string, unknown>, column: string): string {
 }
 
 /** Chemin absolu macOS, Windows ou UNC. `C:` n’est pas traité comme un schéma d’URL. */
-export function isAbsoluteLaunchPath(value: string): boolean {
+function isAbsoluteLaunchPath(value: string): boolean {
   return (
     /^[A-Za-z]:[\\/]/.test(value) ||
     value.startsWith('\\\\') ||

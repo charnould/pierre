@@ -49,13 +49,13 @@ export type WorkbookInspectSheet = {
   columnStats: WorkbookColumnStats[]
 }
 
-export type ValidatedSpreadsheetColumn = {
+type ValidatedSpreadsheetColumn = {
   colIndex: number
   colLetter: string
   name: string
 }
 
-export type SpreadsheetValidationErrorCode =
+type SpreadsheetValidationErrorCode =
   'missing_spreadsheet_header' | 'invalid_spreadsheet_header' | 'duplicate_spreadsheet_header'
 
 export type SpreadsheetValidationResult =

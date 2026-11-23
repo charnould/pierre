@@ -1,5 +1,5 @@
 export const RCS_CHOICES_MAX = 11
-export const RCS_LABEL_MAX = 25
+const RCS_LABEL_MAX = 25
 
 export type RcsChoice =
   | { type: 'reply'; label: string }

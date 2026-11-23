@@ -215,18 +215,18 @@ export function budgetTypeLabel(code: string | null): string {
 
 type Code = readonly (readonly [string, string, ...string[]])[]
 
-export type YesNo = (typeof YES_NO)[number][0]
+type YesNo = (typeof YES_NO)[number][0]
 export type LeaseStatus = (typeof LEASE_STATUSES)[number][0]
 export type ResidenceMode = (typeof RESIDENCE_MODES)[number][0]
-export type ContestStatus = (typeof CONTEST_STATUSES)[number][0]
-export type BanqueDeFranceSituation = (typeof BANQUE_DE_FRANCE_SITUATIONS)[number][0]
-export type ProofLevel = (typeof PROOF_LEVELS)[number][0]
-export type Consent = (typeof CONSENTS)[number][0]
-export type HousingOrientation = (typeof HOUSING_ORIENTATIONS)[number][0]
+type ContestStatus = (typeof CONTEST_STATUSES)[number][0]
+type BanqueDeFranceSituation = (typeof BANQUE_DE_FRANCE_SITUATIONS)[number][0]
+type ProofLevel = (typeof PROOF_LEVELS)[number][0]
+type Consent = (typeof CONSENTS)[number][0]
+type HousingOrientation = (typeof HOUSING_ORIENTATIONS)[number][0]
 export type ScheduleAssessment = (typeof SCHEDULE_ASSESSMENTS)[number][0]
-export type ContestedTreatment = (typeof CONTESTED_TREATMENTS)[number][0]
+type ContestedTreatment = (typeof CONTESTED_TREATMENTS)[number][0]
 
-export type Address = {
+type Address = {
   adresse: string | null
   code_postal: string | null
   commune: string | null
@@ -361,9 +361,9 @@ export type SocialFinancialDiagnosis = {
   motif_non_soutenabilite: string | null
 }
 
-export type SettlementPlan = { version: 1 }
+type SettlementPlan = { version: 1 }
 
-export type SocialCohesionProtocol = { version: 1 }
+type SocialCohesionProtocol = { version: 1 }
 
 export type RepaymentCaseFile = {
   donnees_communes: CommonData
@@ -1072,7 +1072,7 @@ export function parseRepaymentCaseFileContent(type: string, raw: string): Repaym
   }
 }
 
-export function blankAddress(): Address {
+function blankAddress(): Address {
   return { adresse: null, code_postal: null, commune: null }
 }
 

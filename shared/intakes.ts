@@ -27,7 +27,7 @@ export const INTAKE_MIME_LABELS: Record<IntakeAllowedMime, string> = {
   'image/webp': 'WebP'
 }
 
-export const INTAKE_RESERVED_COLUMNS = [
+const INTAKE_RESERVED_COLUMNS = [
   'id',
   'date_creation',
   'rattachement',
@@ -69,7 +69,7 @@ export const INTAKE_FIELD_TYPE_LABELS: Record<IntakeFieldType, string> = {
   file: 'Fichier'
 }
 
-export type IntakeSectionField = {
+type IntakeSectionField = {
   type: 'section'
   label: string
   description?: string
@@ -82,7 +82,7 @@ export type IntakeTextField = {
   required?: boolean
 }
 
-export type IntakeCheckboxField = {
+type IntakeCheckboxField = {
   type: 'checkbox'
   label: string
   description?: string
@@ -98,7 +98,7 @@ export type IntakeSingleChoiceField = {
   options: string[]
 }
 
-export type IntakeMultipleChoiceField = {
+type IntakeMultipleChoiceField = {
   type: 'multiple_choice'
   label: string
   description?: string
@@ -181,18 +181,6 @@ export type PatchIntakeBody = {
   config?: IntakeConfig
 }
 
-export type IntakeApiError = {
-  error: {
-    code: string
-    message: string
-    fields?: Record<string, string>
-  }
-}
-
-export type IntakeListResponse = { data: IntakeRecord[] } | IntakeApiError
-export type IntakeResponse = { data: IntakeRecord } | IntakeApiError
-export type IntakeDeleteResponse = { data: { deleted: true } } | IntakeApiError
-
 export type IntakePublicBoot = {
   organizationName: string
   form: IntakeConfig['form']
@@ -202,7 +190,7 @@ export type IntakePublicBoot = {
   initialSubmissionId: string
 }
 
-export const INTAKE_KNOWLEDGE_PREFIX = 'intake:'
+const INTAKE_KNOWLEDGE_PREFIX = 'intake:'
 
 export function intakeTableName(tableName: string): string {
   return `intake_${tableName}`
@@ -226,7 +214,7 @@ export function intakeFieldColumnName(label: string): string {
   return normalize_knowledge_name(label)
 }
 
-export const RESERVED_INTAKE_TABLE_NAMES = new Set<string>([
+const RESERVED_INTAKE_TABLE_NAMES = new Set<string>([
   'documents',
   'communes_par_code_postal',
   ...DATASTORE_TABLES

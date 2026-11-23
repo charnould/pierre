@@ -91,8 +91,8 @@ export type LlmRunSummary = {
 
 export type LlmRun = LlmRunSummary & { details: LlmRunDetails }
 
-export type UsagePoint = { date: string; tokens: number | null }
-export type UsageByOperation = { operation: LlmOperation; tokens: number | null }
+type UsagePoint = { date: string; tokens: number | null }
+type UsageByOperation = { operation: LlmOperation; tokens: number | null }
 
 export type LlmUsageSummary = {
   period: UsagePeriod
@@ -124,7 +124,7 @@ function offsetMs(date: Date, timeZone: string): number {
   return zonedAsUtc - date.getTime()
 }
 
-export function zonedTime(
+function zonedTime(
   year: number,
   month: number,
   day: number,
@@ -139,15 +139,12 @@ export function zonedTime(
   return new Date(guess - corrected)
 }
 
-export function calendarDate(
-  date: Date,
-  timeZone: string
-): { year: number; month: number; day: number } {
+function calendarDate(date: Date, timeZone: string): { year: number; month: number; day: number } {
   const part = zonedDateParts(date, timeZone)
   return { year: part.year, month: part.month, day: part.day }
 }
 
-export function dayKey(iso: string, timeZone: string): string {
+function dayKey(iso: string, timeZone: string): string {
   const date = calendarDate(new Date(iso), timeZone)
   return `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`
 }

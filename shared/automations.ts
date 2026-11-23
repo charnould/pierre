@@ -11,7 +11,7 @@ export type AutomationRunStatus = (typeof AUTOMATION_RUN_STATUSES)[number]
 const AUTOMATION_TYPES = ['report'] as const
 export type AutomationType = (typeof AUTOMATION_TYPES)[number]
 
-export type ReportAutomationConfig = {
+type ReportAutomationConfig = {
   prompt: string
   maxReports: number
 }
