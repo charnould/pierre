@@ -21,7 +21,7 @@ const HELP: Array<[string, string]> = [
   ['remove', 'Supprime les services et les données']
 ]
 
-export type StatusLevel = 'ok' | 'warn' | 'bad'
+type StatusLevel = 'ok' | 'warn' | 'bad'
 
 export type StatusLine = {
   level: StatusLevel
@@ -45,7 +45,7 @@ function truncate(text: string, width: number): string {
   return `${characters.slice(0, width - 1).join('')}…`
 }
 
-export function renderLogo(ctx: Context): string {
+function renderLogo(ctx: Context): string {
   const { bold, reset } = ctx.runtime.palette
   const mark = ctx.runtime.columns < 56 ? ['  PIERRE'] : WORDMARK
   return ['', ...mark.map((line) => `${bold}${line}${reset}`), ''].join('\n')

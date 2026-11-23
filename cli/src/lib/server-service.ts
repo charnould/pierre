@@ -4,7 +4,7 @@ import { dirname } from 'node:path'
 import { fsyncPath } from './fs.ts'
 import { CommandFailed, type Context, must, runCommand, type Runtime } from './system.ts'
 
-export function serverUnit(ctx: Context): string {
+function serverUnit(ctx: Context): string {
   const { bin, envFile, home, serverCurrent, smolvmCache, smolvmData, smolvmHome } =
     ctx.runtime.paths
   return `[Unit]
@@ -29,7 +29,7 @@ WantedBy=multi-user.target
 `
 }
 
-export async function writeUnit(ctx: Context, content: string) {
+async function writeUnit(ctx: Context, content: string) {
   const path = ctx.runtime.paths.unitFile
   const temporary = `${path}.new`
   writeFileSync(temporary, content)

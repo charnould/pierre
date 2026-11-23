@@ -25,16 +25,11 @@ import {
 } from './github.ts'
 import { CommandFailed, type Context, must } from './system.ts'
 
-export const SERVER_BINARY = 'pierre'
-export const ONNX_LIBRARY = 'libonnxruntime.so.1'
-export const MICROVM_IMAGE = 'pierre-linux-amd64.smolmachine'
+const SERVER_BINARY = 'pierre'
+const ONNX_LIBRARY = 'libonnxruntime.so.1'
+const MICROVM_IMAGE = 'pierre-linux-amd64.smolmachine'
 export const TRANSCRIBE_ARCHIVE = 'libtranscribe.tar.gz'
-export const SERVER_ASSETS = [
-  SERVER_BINARY,
-  ONNX_LIBRARY,
-  MICROVM_IMAGE,
-  TRANSCRIBE_ARCHIVE
-] as const
+const SERVER_ASSETS = [SERVER_BINARY, ONNX_LIBRARY, MICROVM_IMAGE, TRANSCRIBE_ARCHIVE] as const
 
 function requireFile(path: string, label: string) {
   if (!existsSync(path) || statSync(path).size === 0) {
@@ -42,7 +37,7 @@ function requireFile(path: string, label: string) {
   }
 }
 
-export function createServerStage(ctx: Context): string {
+function createServerStage(ctx: Context): string {
   mkdirSync(ctx.runtime.paths.serverReleases, { recursive: true, mode: 0o700 })
   return mkdtempSync(join(ctx.runtime.paths.serverRoot, '.stage-'))
 }
@@ -56,7 +51,7 @@ export async function findServerRelease(ctx: Context): Promise<string | null> {
   return selectServerRelease(await fetchReleases(ctx))?.tag ?? null
 }
 
-export async function stageServerBundle(ctx: Context, tag: string, directory: string) {
+async function stageServerBundle(ctx: Context, tag: string, directory: string) {
   const digests = await serverDigests(ctx, tag)
   await Promise.all(SERVER_ASSETS.map((name) => fetchTo(ctx, name, join(directory, name), tag)))
   const binary = join(directory, SERVER_BINARY)
@@ -88,11 +83,7 @@ export async function publishServerBundle(ctx: Context, tag: string): Promise<st
   }
 }
 
-export async function commitServerBundle(
-  ctx: Context,
-  tag: string,
-  stage: string
-): Promise<string> {
+async function commitServerBundle(ctx: Context, tag: string, stage: string): Promise<string> {
   const release = join(ctx.runtime.paths.serverReleases, tag)
   if (existsSync(release)) {
     for (const name of SERVER_ASSETS) {
