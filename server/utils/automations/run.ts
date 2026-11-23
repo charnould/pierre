@@ -11,10 +11,12 @@ import {
   claim_automation,
   claim_automation_manual,
   finalize_automation_run,
+  get_automation,
   get_automation_raw,
   list_due_automation_ids,
   list_stuck_running_ids,
-  renew_automation_lease
+  renew_automation_lease,
+  stop_running_automation
 } from './store'
 
 type ExecutorResult = {
@@ -28,6 +30,11 @@ export type AutomationExecutor = (
 ) => Promise<ExecutorResult>
 
 let active_executor: AutomationExecutor | null = execute_automation
+const active_runs = new Map<string, AbortController>()
+
+export function abort_automation_run(id: string): void {
+  active_runs.get(id)?.abort()
+}
 
 /** Test / future agent hook. */
 export function set_automation_executor(executor: AutomationExecutor): void {
@@ -60,6 +67,7 @@ async function execute_claimed(
   const executor = active_executor
   if (!executor) throw new AutomationsError('Automation executor is not configured', 'unavailable')
   const abort = new AbortController()
+  active_runs.set(id, abort)
   const heartbeat = setInterval(() => {
     try {
       if (!renew_automation_lease(id, run_token)) abort.abort()
@@ -75,9 +83,12 @@ async function execute_claimed(
     notify_run(automation, result)
     finalize_automation_run(id, run_token, 'success', options)
   } catch (error) {
-    console.error('[automations.run]', error)
+    if (!abort.signal.aborted) {
+      console.error('[automations.run]', error)
+    }
     finalize_automation_run(id, run_token, 'error', options)
   } finally {
+    if (active_runs.get(id) === abort) active_runs.delete(id)
     clearInterval(heartbeat)
   }
   return get_automation_raw(id)
@@ -134,5 +145,19 @@ export async function run_automation_now(
     throw new AutomationsError('Automation already running', 'conflict')
   }
   const result = await execute_claimed(id, run_token, { restorePaused })
-  return result!
+  if (!result) throw new AutomationsError('Automation not found', 'not_found')
+  return result
+}
+
+export function stop_automation_run(id: string, actor: CollaboratorActor): AutomationRecord {
+  const automation = get_automation(id, actor)
+  if (!automation) {
+    throw new AutomationsError('Automation not found', 'not_found')
+  }
+  if (!canManageCollaboratorResource(automation.owner, actor)) {
+    throw new AutomationsError('Forbidden', 'forbidden')
+  }
+  abort_automation_run(id)
+  stop_running_automation(id)
+  return get_automation(id, actor)!
 }

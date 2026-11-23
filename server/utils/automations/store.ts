@@ -307,14 +307,7 @@ export function delete_automation(id: string, actor: CollaboratorActor): void {
     if (!canManageCollaboratorResource(row.owner, actor)) {
       throw new AutomationsError('Forbidden', 'forbidden')
     }
-    const deleted = db.run(
-      `DELETE FROM automations
-       WHERE id = ? AND status <> 'running'`,
-      [id]
-    )
-    if (deleted.changes === 0) {
-      throw new AutomationsError('Automation already running', 'conflict')
-    }
+    db.run('DELETE FROM automations WHERE id = ?', [id])
     purge_pin_from_all_users(db, id)
   }).immediate()
 }
@@ -482,6 +475,27 @@ export function finalize_automation_run(
   } finally {
     db.close()
   }
+}
+
+export function stop_running_automation(id: string): void {
+  using db = openDatastore()
+  db.transaction(() => {
+    const row = db
+      .query<AutomationDbRow, [string]>('SELECT * FROM automations WHERE id = ? LIMIT 1')
+      .get(id)
+    if (!row || row.status !== 'running') return
+    const now = new Date().toISOString()
+    const status: AutomationLifecycleStatus = row.next_run_at === null ? 'paused' : 'scheduled'
+    const next_run_at =
+      status === 'scheduled' ? compute_next_run_at(row.cron, timezone(), new Date(now)) : null
+    db.run(
+      `UPDATE automations SET
+         status = ?, last_run_at = ?, last_run_status = 'error', next_run_at = ?,
+         run_token = NULL, lease_expires_at = NULL
+       WHERE id = ? AND status = 'running'`,
+      [status, now, next_run_at, id]
+    )
+  }).immediate()
 }
 
 export function get_automation_raw(id: string): AutomationRecord | null {

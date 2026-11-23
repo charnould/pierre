@@ -11,6 +11,7 @@ import {
   patchAutomation,
   pinAutomation as postPin,
   runAutomation as postRun,
+  stopAutomationRun as deleteRun,
   unpinAutomation as deletePin
 } from '../../../../../routes/automations'
 import type { User } from '../../../../../utils/_schema'
@@ -40,6 +41,7 @@ app.post('/automations', postAutomation)
 app.patch('/automations/:id', patchAutomation)
 app.delete('/automations/:id', deleteAutomation)
 app.post('/automations/:id/run', postRun)
+app.delete('/automations/:id/run', deleteRun)
 app.post('/automations/:id/pin', postPin)
 app.delete('/automations/:id/pin', deletePin)
 
@@ -148,7 +150,8 @@ describe('automation route classes', () => {
     for (const [method, suffix, body] of [
       ['PATCH', '', { name: 'Usurpation' }],
       ['DELETE', '', undefined],
-      ['POST', '/run', undefined]
+      ['POST', '/run', undefined],
+      ['DELETE', '/run', undefined]
     ] as const) {
       const response = await app.request(
         `/automations/${created.data.id}${suffix}`,
@@ -181,6 +184,7 @@ describe('automation route classes', () => {
       ['PATCH', ''],
       ['DELETE', ''],
       ['POST', '/run'],
+      ['DELETE', '/run'],
       ['POST', '/pin'],
       ['DELETE', '/pin']
     ] as const) {
@@ -209,5 +213,83 @@ describe('automation route classes', () => {
     const response = await app.request(`/automations/${created.data.id}/run`, request('POST'))
     expect(response.status).toBe(503)
     expect(await response.json()).toMatchObject({ error: { code: 'unavailable' } })
+  })
+
+  it('allows deleting a running automation and aborts the in-flight run', async () => {
+    const created = await create()
+    let started!: () => void
+    const executorStarted = new Promise<void>((resolve) => {
+      started = resolve
+    })
+    let aborted = false
+    set_automation_executor(async (_automation, { signal }) => {
+      started()
+      return await new Promise((_resolve, reject) => {
+        signal.addEventListener(
+          'abort',
+          () => {
+            aborted = true
+            reject(new DOMException('Aborted', 'AbortError'))
+          },
+          { once: true }
+        )
+      })
+    })
+
+    const runPromise = app.request(`/automations/${created.data.id}/run`, request('POST'))
+    await executorStarted
+
+    const deleted = await app.request(`/automations/${created.data.id}`, request('DELETE'))
+    expect(deleted.status).toBe(200)
+    expect(await deleted.json()).toEqual({ data: { deleted: true } })
+    expect(aborted).toBe(true)
+
+    const runResponse = await runPromise
+    expect(runResponse.status).toBe(404)
+    expect(await runResponse.json()).toMatchObject({ error: { code: 'not_found' } })
+  })
+
+  it('stops an in-flight run via DELETE /automations/:id/run without deleting the automation', async () => {
+    const created = await create()
+    let started!: () => void
+    const executorStarted = new Promise<void>((resolve) => {
+      started = resolve
+    })
+    let aborted = false
+    set_automation_executor(async (_automation, { signal }) => {
+      started()
+      return await new Promise((_resolve, reject) => {
+        signal.addEventListener(
+          'abort',
+          () => {
+            aborted = true
+            reject(new DOMException('Aborted', 'AbortError'))
+          },
+          { once: true }
+        )
+      })
+    })
+
+    const runPromise = app.request(`/automations/${created.data.id}/run`, request('POST'))
+    await executorStarted
+
+    const stopped = await app.request(`/automations/${created.data.id}/run`, request('DELETE'))
+    expect(stopped.status).toBe(200)
+    expect((await stopped.json()) as unknown).toMatchObject({
+      data: { id: created.data.id, status: 'scheduled', lastRunStatus: 'error' }
+    })
+    expect(aborted).toBe(true)
+
+    const runResponse = await runPromise
+    expect(runResponse.status).toBe(200)
+    expect((await runResponse.json()) as unknown).toMatchObject({
+      data: { id: created.data.id, status: 'scheduled', lastRunStatus: 'error' }
+    })
+
+    const listed = await app.request('/automations')
+    expect(listed.status).toBe(200)
+    expect((await listed.json()) as { data: unknown[] }).toMatchObject({
+      data: [{ id: created.data.id }]
+    })
   })
 })

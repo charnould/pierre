@@ -3,6 +3,7 @@ import { rm } from 'node:fs/promises'
 import type { FileSink, Subprocess } from 'bun'
 import { $ } from 'bun'
 
+import { promptById } from '../../shared/prompts'
 import { cleanupConversationWorkspace } from './ai-attachments'
 import { datastorePaths } from './paths'
 import type { PierreInstance } from './smolvm'
@@ -342,15 +343,21 @@ export async function acquireVm(
   console.log(`[VM_REGISTRY] Creating VM for conv=${convId} config=${configId}`)
   const knowledgePath = getKnowledgePath(configId)
   const workspacePath = getConversationWorkspacePath(configId, convId)
+  const autonomous = promptById(configId)?.access === 'automations'
   const poolName = dependencies.takePoolInstance()
   let instance: PierreInstance
   try {
     if (poolName) {
       console.log(`[VM_REGISTRY] Using pool VM ${poolName} for conv=${convId}`)
-      instance = await dependencies.startPoolInstance(poolName, knowledgePath, workspacePath)
+      instance = await dependencies.startPoolInstance(
+        poolName,
+        knowledgePath,
+        workspacePath,
+        autonomous
+      )
     } else {
       console.log(`[VM_REGISTRY] Pool empty — creating VM from .smolmachine for conv=${convId}`)
-      instance = await dependencies.createInstance(convId, configId)
+      instance = await dependencies.createInstance(convId, configId, autonomous)
     }
   } catch (error) {
     pendingCreations.delete(convId)

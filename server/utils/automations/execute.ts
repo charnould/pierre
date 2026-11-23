@@ -6,14 +6,6 @@ import { AutomationsError } from './store'
 
 type ReportStream = typeof streamCopilot
 
-function argumentStrings(value: unknown): string {
-  if (typeof value === 'string') return value
-  if (!value || typeof value !== 'object') return ''
-  return Object.values(value as Record<string, unknown>)
-    .filter((item): item is string => typeof item === 'string')
-    .join('')
-}
-
 function messageText(message: AiStreamMessage): string {
   return message.content
     .filter((part): part is { type: 'text'; text: string } => part.type === 'text')
@@ -21,10 +13,10 @@ function messageText(message: AiStreamMessage): string {
     .join('')
 }
 
-/** The stored report is the single article. Anything around it is discarded. */
-function reportArticle(transcript: string): string {
-  const articles = [...transcript.matchAll(/<article\b([^>]*)>[\s\S]*?<\/article>/gi)].filter(
-    (match) => /\bclass\s*=\s*["'][^"']*\breport\b/.test(match[1] ?? '')
+/** The stored report is the single article in the final assistant message. */
+function reportArticle(text: string): string {
+  const articles = [...text.matchAll(/<article\b([^>]*)>[\s\S]*?<\/article>/gi)].filter((match) =>
+    /\bclass\s*=\s*["'][^"']*\breport\b/.test(match[1] ?? '')
   )
   if (articles.length !== 1) throw new AutomationsError('Rapport invalide.', 'unavailable')
   return articles[0]![0]
@@ -35,7 +27,7 @@ export async function execute_automation(
   context: { runToken: string; signal: AbortSignal },
   stream: ReportStream = streamCopilot
 ): Promise<{ kind: 'report'; contenu: string }> {
-  let transcript = ''
+  let lastMessage = ''
   for await (const chunk of stream(
     Bun.randomUUIDv7(),
     'report',
@@ -53,10 +45,7 @@ export async function execute_automation(
       }
     }
   )) {
-    if (chunk.type === 'message_end') transcript += messageText(chunk.message)
-    if (chunk.type === 'tool_execution_start' && chunk.toolName === 'write') {
-      transcript += argumentStrings(chunk.args)
-    }
+    if (chunk.type === 'message_end') lastMessage = messageText(chunk.message)
   }
-  return { kind: 'report', contenu: reportArticle(transcript) }
+  return { kind: 'report', contenu: reportArticle(lastMessage) }
 }

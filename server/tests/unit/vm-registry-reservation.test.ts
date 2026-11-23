@@ -178,4 +178,60 @@ describe('VM registry conversation reservations', () => {
       setDatastoreRoot(null)
     }
   })
+
+  test('passes autonomous=true for automation profiles and false for chat', async () => {
+    const root = testDatastoreRoot(`vm-autonomous-${Bun.randomUUIDv7()}`)
+    setDatastoreRoot(root)
+    const calls: Array<{ kind: 'pool' | 'create'; autonomous: boolean | undefined }> = []
+    let poolNext: string | undefined = 'pool-1'
+    const dependencies: AcquireVmDependencies = {
+      takePoolInstance: () => {
+        const current = poolNext
+        poolNext = undefined
+        return current
+      },
+      startPoolInstance: async (name, knowledgePath, workspacePath, autonomous) => {
+        calls.push({ kind: 'pool', autonomous })
+        return { name, knowledgePath, workspacePath, fromPool: true, piProcess: {} as never }
+      },
+      createInstance: async (convId, configId, autonomous) => {
+        calls.push({ kind: 'create', autonomous })
+        return {
+          name: convId,
+          knowledgePath: getKnowledgePath(configId),
+          workspacePath: getConversationWorkspacePath(configId, convId),
+          fromPool: false,
+          piProcess: {} as never
+        }
+      },
+      destroyInstance: async () => {},
+      createClient: () =>
+        ({
+          waitForReady: async () => {},
+          dispose: () => {},
+          sendCommand: async () => ({}),
+          sendRaw: () => {},
+          onEvent: () => () => {},
+          onClose: () => () => {}
+        }) as never
+    }
+    const reportConv = '0198f1a0-7b6c-7000-8000-000000000010'
+    const chatConv = '0198f1a0-7b6c-7000-8000-000000000011'
+
+    try {
+      await acquireVm(reportConv, 'report', dependencies)
+      releaseVm(reportConv)
+      await acquireVm(chatConv, 'default', dependencies)
+      releaseVm(chatConv)
+      expect(calls).toEqual([
+        { kind: 'pool', autonomous: true },
+        { kind: 'create', autonomous: false }
+      ])
+    } finally {
+      await destroyVm(reportConv)
+      await destroyVm(chatConv)
+      await Bun.spawn(['rm', '-rf', root]).exited
+      setDatastoreRoot(null)
+    }
+  })
 })

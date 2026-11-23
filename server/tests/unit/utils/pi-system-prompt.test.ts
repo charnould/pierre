@@ -37,6 +37,18 @@ describe('Pi native system prompt', () => {
     expect(command).toContain('--append-system-prompt')
     expect(command[command.indexOf('--append-system-prompt') + 1]).toBe(PI_SYSTEM_PROMPT_PATH)
     expect(command).toContain('read,bash,edit,write,grep,find,ls,ask_user')
+    expect(command).toContain('-e')
+  })
+
+  it('omits ask_user, write, edit, and the ask-user extension for autonomous runs', () => {
+    const command = buildPiCommand('vm-test', {
+      provider: 'anthropic',
+      envArgs: ['-e', 'ANTHROPIC_API_KEY=test'],
+      model: 'test-model',
+      autonomous: true
+    })
+    expect(command[command.indexOf('--tools') + 1]).toBe('read,bash,grep,find,ls')
+    expect(command).not.toContain('/opt/pierre/extensions/ask-user.ts')
   })
 
   it('keeps the conversation AGENTS file limited to dynamic context', async () => {

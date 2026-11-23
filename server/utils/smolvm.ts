@@ -55,6 +55,7 @@ function piLaunch(): { provider: '' | 'anthropic' | 'openai'; envArgs: string[] 
 /** Faster Pi RPC boot: skip extension/skill/template discovery and startup network I/O. */
 const PI_LEAN_ARGS = ['--no-extensions', '-ns', '-np', '--no-themes', '--offline'] as const
 const PI_TOOLS = 'read,bash,edit,write,grep,find,ls,ask_user'
+const PI_AUTOMATION_TOOLS = 'read,bash,grep,find,ls'
 const ASK_USER_EXTENSION_PATH = '/opt/pierre/extensions/ask-user.ts'
 export const PI_SYSTEM_PROMPT_PATH = '/opt/pierre/PI_SYSTEM_APPEND.md'
 
@@ -64,8 +65,10 @@ export function buildPiCommand(
     provider: '' | 'anthropic' | 'openai'
     envArgs: string[]
     model: string
+    autonomous?: boolean
   }
 ): string[] {
+  const autonomous = input.autonomous === true
   return [
     'smolvm',
     'machine',
@@ -86,21 +89,23 @@ export function buildPiCommand(
     input.model,
     ...PI_LEAN_ARGS,
     '--tools',
-    PI_TOOLS,
+    autonomous ? PI_AUTOMATION_TOOLS : PI_TOOLS,
     '--append-system-prompt',
     PI_SYSTEM_PROMPT_PATH,
-    '-e',
-    ASK_USER_EXTENSION_PATH
+    ...(autonomous ? [] : ['-e', ASK_USER_EXTENSION_PATH])
   ]
 }
 
-function spawnPiProcess(name: string): Subprocess<'pipe', 'pipe', 'inherit'> {
+function spawnPiProcess(name: string, autonomous = false): Subprocess<'pipe', 'pipe', 'inherit'> {
   const { provider, envArgs } = piLaunch()
-  const piProcess = Bun.spawn(buildPiCommand(name, { provider, envArgs, model: readAi().model }), {
-    stdin: 'pipe',
-    stdout: 'pipe',
-    stderr: 'inherit'
-  }) as Subprocess<'pipe', 'pipe', 'inherit'>
+  const piProcess = Bun.spawn(
+    buildPiCommand(name, { provider, envArgs, model: readAi().model, autonomous }),
+    {
+      stdin: 'pipe',
+      stdout: 'pipe',
+      stderr: 'inherit'
+    }
+  ) as Subprocess<'pipe', 'pipe', 'inherit'>
 
   piProcess.exited.then((code) =>
     console.log(`[SMOLVM] Pi process exited with code ${code} for VM ${name}`)
@@ -116,7 +121,8 @@ function spawnPiProcess(name: string): Subprocess<'pipe', 'pipe', 'inherit'> {
 export async function startPierreOnPoolVm(
   name: string,
   knowledgePath: string,
-  workspacePath: string
+  workspacePath: string,
+  autonomous = false
 ): Promise<PierreInstance> {
   await $`mkdir -p ${workspacePath}`
   await withVmCreationSlot(async () => {
@@ -124,7 +130,7 @@ export async function startPierreOnPoolVm(
     await $`smolvm machine start --name ${name}`
   })
 
-  const piProcess = spawnPiProcess(name)
+  const piProcess = spawnPiProcess(name, autonomous)
   console.log(`[SMOLVM] Pool VM ${name} ready — Pi RPC subprocess started`)
   return { name, knowledgePath, workspacePath, fromPool: true, piProcess }
 }
@@ -135,7 +141,8 @@ export async function startPierreOnPoolVm(
  */
 export async function createPierreInstance(
   convId: string,
-  configId: string
+  configId: string,
+  autonomous = false
 ): Promise<PierreInstance> {
   const name = convId
   const knowledgePath = getKnowledgePath(configId)
@@ -148,7 +155,7 @@ export async function createPierreInstance(
     await $`smolvm machine start --name ${name}`
   })
 
-  const piProcess = spawnPiProcess(name)
+  const piProcess = spawnPiProcess(name, autonomous)
   console.log(`[SMOLVM] VM ${name} ready — Pi RPC subprocess started`)
   return { name, knowledgePath, workspacePath, fromPool: false, piProcess }
 }
