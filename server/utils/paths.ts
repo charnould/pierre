@@ -1,6 +1,8 @@
 import { existsSync } from 'node:fs'
 import { isAbsolute, join, relative, resolve } from 'node:path'
 
+import microvmVersions from '../microvm/versions.json' with { type: 'json' }
+
 // In the compiled executable every module shares the entry directory, and --asset
 // lands next to it. In the repo, this file lives in server/utils.
 const moduleDir = import.meta.dir
@@ -67,4 +69,15 @@ export const SMOLMACHINE_PATH = PIERRE_HOME
       process.platform === 'darwin'
         ? 'pierre-darwin-arm64.smolmachine'
         : 'pierre-linux-amd64.smolmachine'
+    )
+
+export const SMOLVM_BIN = PIERRE_HOME
+  ? 'smolvm'
+  : join(
+      SERVER_ROOT,
+      'microvm',
+      '.tools',
+      process.platform === 'darwin' ? 'darwin-arm64' : 'linux-amd64',
+      `smolvm-${microvmVersions.smolvm.version}-${process.platform === 'darwin' ? 'darwin-arm64' : 'linux-x86_64'}`,
+      'smolvm'
     )

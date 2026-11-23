@@ -2,7 +2,7 @@ import { $ } from 'bun'
 import type { Subprocess } from 'bun'
 
 import { assertCanonicalConversationId } from './ai-attachments'
-import { datastorePaths, resolvePathWithin } from './paths'
+import { datastorePaths, resolvePathWithin, SMOLVM_BIN } from './paths'
 import { readAi, readProviders } from './providers'
 import { getSmolmachinePath, returnPoolVm, vmResources, withVmCreationSlot } from './vm-pool'
 
@@ -33,7 +33,10 @@ export function getConversationUploadsPath(configId: string, convId: string): st
   return resolvePathWithin(getConversationWorkspacePath(configId, convId), '_uploads')
 }
 
-function piLaunch(): { provider: '' | 'anthropic' | 'openai'; envArgs: string[] } {
+/** Default smolvm virtio-net host gateway (forwards to host 127.0.0.1; TSI blocks localhost). */
+const PIERRE_HOST_GATEWAY = '100.96.0.1'
+
+export function piLaunch(): { provider: '' | 'anthropic' | 'openai'; envArgs: string[] } {
   const { llmType, llmApiKey, llmBaseUrl } = readProviders()
   const provider =
     llmType === 'anthropic'
@@ -41,7 +44,8 @@ function piLaunch(): { provider: '' | 'anthropic' | 'openai'; envArgs: string[] 
       : llmType === 'openai' || llmType === 'openai-compatible'
         ? 'openai'
         : ''
-  const envArgs: string[] = []
+  const port = Number(Bun.env['BUN_PORT'] ?? 3000) || 3000
+  const envArgs: string[] = ['-e', `PIERRE_URL=http://${PIERRE_HOST_GATEWAY}:${port}`]
   if (provider === 'openai' && llmApiKey) {
     envArgs.push('-e', `OPENAI_API_KEY=${llmApiKey}`)
     if (llmBaseUrl) envArgs.push('-e', `OPENAI_BASE_URL=${llmBaseUrl}`)
@@ -56,7 +60,7 @@ function piLaunch(): { provider: '' | 'anthropic' | 'openai'; envArgs: string[] 
 const PI_LEAN_ARGS = ['--no-extensions', '-ns', '-np', '--no-themes', '--offline'] as const
 const PI_TOOLS = 'read,bash,edit,write,grep,find,ls,ask_user'
 const PI_AUTOMATION_TOOLS = 'read,bash,grep,find,ls'
-const ASK_USER_EXTENSION_PATH = '/opt/pierre/extensions/ask-user.ts'
+export const PI_PACKAGE_PATH = '/opt/pierre'
 export const PI_SYSTEM_PROMPT_PATH = '/opt/pierre/PI_SYSTEM_APPEND.md'
 
 export function buildPiCommand(
@@ -70,7 +74,7 @@ export function buildPiCommand(
 ): string[] {
   const autonomous = input.autonomous === true
   return [
-    'smolvm',
+    SMOLVM_BIN,
     'machine',
     'exec',
     '--name',
@@ -92,7 +96,8 @@ export function buildPiCommand(
     autonomous ? PI_AUTOMATION_TOOLS : PI_TOOLS,
     '--append-system-prompt',
     PI_SYSTEM_PROMPT_PATH,
-    ...(autonomous ? [] : ['-e', ASK_USER_EXTENSION_PATH])
+    '-e',
+    PI_PACKAGE_PATH
   ]
 }
 
@@ -126,8 +131,8 @@ export async function startPierreOnPoolVm(
 ): Promise<PierreInstance> {
   await $`mkdir -p ${workspacePath}`
   await withVmCreationSlot(async () => {
-    await $`smolvm machine update --name ${name} -v ${knowledgePath}:/knowledge:ro -v ${workspacePath}:/work --net`
-    await $`smolvm machine start --name ${name}`
+    await $`${SMOLVM_BIN} machine update --name ${name} -v ${knowledgePath}:/knowledge:ro -v ${workspacePath}:/work --net`
+    await $`${SMOLVM_BIN} machine start --name ${name}`
   })
 
   const piProcess = spawnPiProcess(name, autonomous)
@@ -151,8 +156,8 @@ export async function createPierreInstance(
   await $`mkdir -p ${workspacePath}`
 
   await withVmCreationSlot(async () => {
-    await $`smolvm machine create --net --from ${getSmolmachinePath()} --volume ${knowledgePath}:/knowledge:ro --volume ${workspacePath}:/work --name ${name} --cpus ${cpus} --mem ${memoryMiB}`
-    await $`smolvm machine start --name ${name}`
+    await $`${SMOLVM_BIN} machine create --net --net-backend virtio-net --from ${getSmolmachinePath()} --volume ${knowledgePath}:/knowledge:ro --volume ${workspacePath}:/work --name ${name} --cpus ${cpus} --mem ${memoryMiB}`
+    await $`${SMOLVM_BIN} machine start --name ${name}`
   })
 
   const piProcess = spawnPiProcess(name, autonomous)
@@ -167,17 +172,17 @@ export async function createPierreInstance(
 export async function destroyPierreInstance(instance: PierreInstance): Promise<void> {
   instance.piProcess.kill()
   await withVmCreationSlot(async () => {
-    await $`smolvm machine stop --name ${instance.name}`.nothrow().quiet()
+    await $`${SMOLVM_BIN} machine stop --name ${instance.name}`.nothrow().quiet()
     if (instance.fromPool) {
-      await $`smolvm machine update --name ${instance.name} --remove-volume ${instance.knowledgePath}:/knowledge`
+      await $`${SMOLVM_BIN} machine update --name ${instance.name} --remove-volume ${instance.knowledgePath}:/knowledge`
         .nothrow()
         .quiet()
-      await $`smolvm machine update --name ${instance.name} --remove-volume ${instance.workspacePath}:/work`
+      await $`${SMOLVM_BIN} machine update --name ${instance.name} --remove-volume ${instance.workspacePath}:/work`
         .nothrow()
         .quiet()
       return
     }
-    await $`smolvm machine delete --name ${instance.name} -f`
+    await $`${SMOLVM_BIN} machine delete --name ${instance.name} -f`
   })
   if (instance.fromPool) returnPoolVm(instance.name)
 }

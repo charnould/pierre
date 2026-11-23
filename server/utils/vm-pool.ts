@@ -3,7 +3,7 @@ import { resolve } from 'node:path'
 
 import { $ } from 'bun'
 
-import { SMOLMACHINE_PATH } from './paths'
+import { SMOLMACHINE_PATH, SMOLVM_BIN } from './paths'
 
 const POOL_PREFIX = 'pierre-pool-'
 const DEFAULT_POOL_SIZE = 4
@@ -53,7 +53,7 @@ export function getSmolmachinePath(): string {
 
 async function listPoolMachineNames(): Promise<string[]> {
   try {
-    const raw = await $`smolvm machine ls --json`.json()
+    const raw = await $`${SMOLVM_BIN} machine ls --json`.json()
     const machines = Array.isArray(raw) ? raw : (raw?.machines ?? [])
     return machines
       .map((m: { name: string }) => m.name)
@@ -66,8 +66,8 @@ async function listPoolMachineNames(): Promise<string[]> {
 async function deletePoolMachine(name: string): Promise<void> {
   console.log(`[VM_POOL] Removing stale pool VM: ${name}`)
   await withVmCreationSlot(async () => {
-    await $`smolvm machine stop --name ${name}`.nothrow().quiet()
-    await $`smolvm machine delete --name ${name} -f`.nothrow().quiet()
+    await $`${SMOLVM_BIN} machine stop --name ${name}`.nothrow().quiet()
+    await $`${SMOLVM_BIN} machine delete --name ${name} -f`.nothrow().quiet()
   })
 }
 
@@ -92,7 +92,7 @@ function isAlreadyExistsError(stderr: string): boolean {
 async function ensurePoolMachine(name: string): Promise<void> {
   const { cpus, memoryMiB } = vmResources()
   const result = await withVmCreationSlot(() =>
-    $`smolvm machine create --net --from ${getSmolmachinePath()} --name ${name} --cpus ${cpus} --mem ${memoryMiB}`.nothrow()
+    $`${SMOLVM_BIN} machine create --net --net-backend virtio-net --from ${getSmolmachinePath()} --name ${name} --cpus ${cpus} --mem ${memoryMiB}`.nothrow()
   )
   if (result.exitCode === 0) {
     available.add(name)
