@@ -5,7 +5,7 @@ import { $ } from 'bun'
 
 import { promptById } from '../../shared/prompts'
 import { cleanupConversationWorkspace } from './ai-attachments'
-import { datastorePaths } from './paths'
+import { datastorePaths, SMOLVM_BIN } from './paths'
 import type { PierreInstance } from './smolvm'
 import {
   createPierreInstance,
@@ -552,7 +552,7 @@ function cancelPendingUiRequestForEntry(entry: VmEntry): void {
 export async function cleanupOrphanedVms(): Promise<void> {
   let machines: { name: string }[] = []
   try {
-    const raw = await $`smolvm machine ls --json`.json()
+    const raw = await $`${SMOLVM_BIN} machine ls --json`.json()
     machines = Array.isArray(raw) ? raw : (raw?.machines ?? [])
   } catch {
     // Uploads are still safe to clear before the server accepts requests.
@@ -561,11 +561,11 @@ export async function cleanupOrphanedVms(): Promise<void> {
   for (const { name } of machines) {
     await withVmCreationSlot(async () => {
       try {
-        await $`smolvm machine stop --name ${name}`.quiet()
+        await $`${SMOLVM_BIN} machine stop --name ${name}`.quiet()
       } catch {
         // already stopped or unreachable — proceed to delete
       }
-      await $`smolvm machine delete --name ${name} -f`.quiet()
+      await $`${SMOLVM_BIN} machine delete --name ${name} -f`.quiet()
     })
     console.log(`[VM_REGISTRY] Deleted orphaned VM: ${name}`)
   }

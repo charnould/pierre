@@ -3,17 +3,25 @@ import { mkdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import { buildConversationAgentsFile } from '../../../utils/copilot-agent'
-import { datastorePaths, setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
+import {
+  datastorePaths,
+  setDatastoreRoot,
+  SMOLVM_BIN,
+  testDatastorePaths
+} from '../../../utils/paths'
 import { setup } from '../../../utils/setup'
 import {
   buildPiCommand,
   getConversationWorkspacePath,
-  PI_SYSTEM_PROMPT_PATH
+  PI_PACKAGE_PATH,
+  PI_SYSTEM_PROMPT_PATH,
+  piLaunch
 } from '../../../utils/smolvm'
 import { seedInstanceSetup } from '../../seed-setup'
 
 const paths = testDatastorePaths('pi_system_prompt')
 const convId = '0198f1a0-7b6c-7000-8000-000000000001'
+const originalBunPort = Bun.env['BUN_PORT']
 
 beforeEach(async () => {
   setDatastoreRoot(paths.root)
@@ -23,24 +31,28 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
+  if (originalBunPort === undefined) delete Bun.env['BUN_PORT']
+  else Bun.env['BUN_PORT'] = originalBunPort
   setDatastoreRoot(null)
   await rm(paths.root, { recursive: true, force: true })
 })
 
 describe('Pi native system prompt', () => {
-  it('appends the immutable PIERRE prompt to the native Pi command', () => {
+  it('appends the immutable PIERRE prompt and local package to the native Pi command', () => {
     const command = buildPiCommand('vm-test', {
       provider: 'anthropic',
       envArgs: ['-e', 'ANTHROPIC_API_KEY=test'],
       model: 'test-model'
     })
+    expect(command[0]).toBe(SMOLVM_BIN)
     expect(command).toContain('--append-system-prompt')
     expect(command[command.indexOf('--append-system-prompt') + 1]).toBe(PI_SYSTEM_PROMPT_PATH)
     expect(command).toContain('read,bash,edit,write,grep,find,ls,ask_user')
-    expect(command).toContain('-e')
+    const piArgs = command.slice(command.indexOf('--') + 1)
+    expect(piArgs[piArgs.indexOf('-e') + 1]).toBe(PI_PACKAGE_PATH)
   })
 
-  it('omits ask_user, write, edit, and the ask-user extension for autonomous runs', () => {
+  it('omits ask_user, write, and edit from tools for autonomous runs while keeping the local package', () => {
     const command = buildPiCommand('vm-test', {
       provider: 'anthropic',
       envArgs: ['-e', 'ANTHROPIC_API_KEY=test'],
@@ -48,7 +60,16 @@ describe('Pi native system prompt', () => {
       autonomous: true
     })
     expect(command[command.indexOf('--tools') + 1]).toBe('read,bash,grep,find,ls')
-    expect(command).not.toContain('/opt/pierre/extensions/ask-user.ts')
+    const piArgs = command.slice(command.indexOf('--') + 1)
+    expect(piArgs[piArgs.indexOf('-e') + 1]).toBe(PI_PACKAGE_PATH)
+  })
+
+  it('injects PIERRE_URL in piLaunch with default port 3000 and custom BUN_PORT', () => {
+    delete Bun.env['BUN_PORT']
+    expect(piLaunch().envArgs).toContain('PIERRE_URL=http://100.96.0.1:3000')
+
+    Bun.env['BUN_PORT'] = '4567'
+    expect(piLaunch().envArgs).toContain('PIERRE_URL=http://100.96.0.1:4567')
   })
 
   it('keeps the conversation AGENTS file limited to dynamic context', async () => {
