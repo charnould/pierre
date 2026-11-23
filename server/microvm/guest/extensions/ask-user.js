@@ -2,45 +2,33 @@ import { Type } from '@earendil-works/pi-ai'
 
 const ASK_USER_MARKER = 'pierre:ask_user:'
 
-type Question = {
-  question: string
-  choices: [string, string, string]
-}
-
-type Answer = {
-  question: string
-  answer: string
-}
-
-function parseAnswers(value: string | undefined, questions: Question[]): Answer[] | null {
+function parseAnswers(value, questions) {
   if (!value) return null
 
   try {
-    const answers = JSON.parse(value) as unknown
+    const answers = JSON.parse(value)
     if (!Array.isArray(answers) || answers.length !== questions.length) return null
 
     const parsed = answers.map((answer, index) => {
       if (
         typeof answer !== 'object' ||
         answer === null ||
-        typeof (answer as Record<string, unknown>)['question'] !== 'string' ||
-        typeof (answer as Record<string, unknown>)['answer'] !== 'string' ||
-        (answer as Record<string, unknown>)['question'] !== questions[index]?.question
+        typeof answer.question !== 'string' ||
+        typeof answer.answer !== 'string' ||
+        answer.question !== questions[index]?.question
       ) {
         return null
       }
-      return answer as Answer
+      return answer
     })
 
-    return parsed.every((answer): answer is Answer => answer !== null) ? parsed : null
+    return parsed.every((answer) => answer !== null) ? parsed : null
   } catch {
     return null
   }
 }
 
-export default function askUserExtension(pi: {
-  registerTool: (tool: Record<string, unknown>) => void
-}) {
+export default function askUserExtension(pi) {
   pi.registerTool({
     name: 'ask_user',
     label: 'Ask user',
@@ -65,21 +53,7 @@ export default function askUserExtension(pi: {
       },
       { additionalProperties: false }
     ),
-    async execute(
-      toolCallId: string,
-      params: { questions: Question[] },
-      signal: AbortSignal | undefined,
-      _onUpdate: unknown,
-      ctx: {
-        ui: {
-          input: (
-            title: string,
-            placeholder?: string,
-            options?: { signal?: AbortSignal }
-          ) => Promise<string | undefined>
-        }
-      }
-    ) {
+    async execute(toolCallId, params, signal, _onUpdate, ctx) {
       const value = await ctx.ui.input(
         `${ASK_USER_MARKER}${JSON.stringify({ toolCallId })}`,
         'JSON answers',

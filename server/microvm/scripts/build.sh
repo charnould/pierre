@@ -123,7 +123,8 @@ test \"\$(node --version)\" = 'v$NODE_VERSION'
   /opt/pierre/agent \
   /opt/pierre/agent/document-extract \
   /opt/pierre/extensions \
-  /opt/pierre/skills
+  /opt/pierre/skills \
+  /opt/pierre/.node-cache
 
 for file in package.json package-lock.json; do
   "$SMOLVM" machine cp "$GUEST/$file" "$BUILD_VM:/opt/pierre/agent/$file"
@@ -149,7 +150,7 @@ chmod +x \
   /opt/pierre/agent/document-extract/extract-spreadsheet.mjs
 "
 
-for file in "$GUEST"/extensions/*.ts; do
+for file in "$GUEST"/extensions/*.js; do
   [ -f "$file" ] || continue
   "$SMOLVM" machine cp "$file" "$BUILD_VM:/opt/pierre/extensions/$(basename "$file")"
 done
@@ -192,11 +193,12 @@ RPC_SMOKE=\$(printf '%s\n' \
   '{\"type\":\"get_state\"}' \
   '{\"type\":\"get_session_stats\"}' \
   '{\"type\":\"get_commands\"}' \
-  | timeout 20s pi \
+  | NODE_COMPILE_CACHE=/opt/pierre/.node-cache timeout 20s pi \
       --mode rpc \
       --no-session \
       --provider anthropic \
       --model claude-sonnet-4-5 \
+      --thinking medium \
       --no-extensions \
       -ns \
       -np \
@@ -214,6 +216,7 @@ printf '%s\n' \"\$RPC_SMOKE\" | jq -s -e '
     and any(.data.commands[]; .name == \"skill:carl\" and .source == \"skill\"))
   and all(.[]; .type != \"extension_error\")
 ' >/dev/null
+test -n \"\$(ls -A /opt/pierre/.node-cache)\"
 test -x /usr/local/bin/document-extract
 test -x /usr/local/bin/carl
 test -r /opt/pierre/skills/carl/SKILL.md
@@ -257,11 +260,133 @@ rg --version
 fd --version
 test -x /usr/local/bin/document-extract
 test -x /usr/local/bin/carl
-test -f /opt/pierre/extensions/ask-user.ts
+test -f /opt/pierre/extensions/ask-user.js
+test -f /opt/pierre/extensions/hot-runtime.js
+test -n \"\$(ls -A /opt/pierre/.node-cache)\"
 test -r /opt/pierre/skills/carl/SKILL.md
 test -r /opt/pierre/PI_SYSTEM_APPEND.md
 test -r /knowledge/marker.txt
 ! touch /knowledge/forbidden
+
+node - <<'JS'
+const http = require('node:http')
+const fs = require('node:fs')
+const { spawn } = require('node:child_process')
+
+const MARKER = 'HOT_CONTEXT_SMOKE_MARKER_42'
+let sawHead = false
+let systemMessage = null
+let resolveSystem
+const gotSystem = new Promise((r) => { resolveSystem = r })
+
+const server = http.createServer((req, res) => {
+  if (req.method === 'HEAD') sawHead = true
+  res.writeHead(200)
+  res.end()
+})
+
+;(async () => {
+  await new Promise((r) => server.listen(0, '127.0.0.1', r))
+  const port = server.address().port
+  const baseUrl = 'http://127.0.0.1:' + port
+
+  const pi = spawn('pi', [
+    '--mode', 'rpc',
+    '--no-session',
+    '--provider', 'anthropic',
+    '--model', 'claude-sonnet-4-5',
+    '--thinking', 'medium',
+    '--no-extensions',
+    '-ns', '-np', '--no-themes', '--offline',
+    '--tools', 'read,bash,edit,write,grep,find,ls,ask_user',
+    '--append-system-prompt', '/opt/pierre/PI_SYSTEM_APPEND.md',
+    '-e', '/opt/pierre'
+  ], {
+    cwd: '/work',
+    env: {
+      ...process.env,
+      NODE_COMPILE_CACHE: '/opt/pierre/.node-cache',
+      ANTHROPIC_API_KEY: 'smoke-key',
+      PIERRE_WARM_URL: baseUrl
+    },
+    stdio: ['pipe', 'pipe', 'inherit']
+  })
+
+  const pending = new Map()
+  const extensionErrors = []
+  let buf = ''
+  pi.stdout.setEncoding('utf8')
+  pi.stdout.on('data', (chunk) => {
+    buf += chunk
+    const lines = buf.split('\n')
+    buf = lines.pop()
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (!trimmed) continue
+      const msg = JSON.parse(trimmed)
+      if (msg.type === 'extension_error') extensionErrors.push(msg)
+      if (msg.type === 'message_end' && msg.message?.role === 'system' && !systemMessage) {
+        systemMessage = msg.message
+        resolveSystem()
+      }
+      if (msg.id && pending.has(msg.id)) {
+        pending.get(msg.id)(msg)
+        pending.delete(msg.id)
+      }
+    }
+  })
+
+  const send = (cmd) => new Promise((resolve, reject) => {
+    const id = 'smoke-' + Math.random().toString(36).slice(2, 8)
+    const timer = setTimeout(() => reject(new Error('timeout ' + cmd.type)), 15000)
+    pending.set(id, (msg) => { clearTimeout(timer); resolve(msg) })
+    pi.stdin.write(JSON.stringify({ ...cmd, id }) + '\n')
+  })
+
+  const state = await send({ type: 'get_state' })
+  if (!state.success || state.data?.autoCompactionEnabled !== true) {
+    throw new Error('get_state failed: ' + JSON.stringify(state))
+  }
+  const stats = await send({ type: 'get_session_stats' })
+  if (!stats.success) throw new Error('get_session_stats failed')
+  const cmds = await send({ type: 'get_commands' })
+  if (!cmds.success || !cmds.data?.commands?.some((c) => c.name === 'skill:carl' && c.source === 'skill')) {
+    throw new Error('skill:carl missing')
+  }
+
+  fs.writeFileSync('/work/AGENTS.md', '\uFEFF' + MARKER + '\n')
+  const promptAck = await send({ type: 'prompt', message: 'ping' })
+  if (!promptAck.success) throw new Error('prompt failed: ' + JSON.stringify(promptAck))
+
+  await Promise.race([
+    gotSystem,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('timed out waiting for system message')), 10000))
+  ])
+
+  pi.stdin.write(JSON.stringify({ type: 'abort' }) + '\n')
+  pi.kill('SIGKILL')
+  server.close()
+  fs.rmSync('/work/AGENTS.md', { force: true })
+
+  if (extensionErrors.length > 0) {
+    throw new Error('extension_error: ' + JSON.stringify(extensionErrors))
+  }
+  if (!sawHead) {
+    throw new Error('PIERRE_WARM_URL HEAD was not received')
+  }
+  const projectContext = systemMessage?.sections?.project_context ?? ''
+  if (!projectContext.includes(MARKER)) {
+    throw new Error('AGENTS.md marker not found in system project_context: ' + projectContext)
+  }
+  if (projectContext.includes('\uFEFF')) {
+    throw new Error('BOM was not stripped from AGENTS.md')
+  }
+})().catch((err) => {
+  console.error(err)
+  process.exit(1)
+})
+JS
+
 printf '%s\n' 'workspace-marker' > /work/result.txt
 
 document-extract /opt/pierre/agent/document-extract/texte.pdf > /tmp/texte.txt
@@ -283,32 +408,6 @@ pandoc /work/long.md -o /work/long.docx
 document-extract /work/long.docx > /tmp/long.txt
 grep -q 'Extraction tronquée à 262144 octets' /tmp/long.txt
 test \"\$(wc -c < /tmp/long.txt)\" -lt 263000
-
-RPC_SMOKE=\$(printf '%s\n' \
-  '{\"type\":\"get_state\"}' \
-  '{\"type\":\"get_session_stats\"}' \
-  '{\"type\":\"get_commands\"}' \
-  | timeout 20s pi \
-      --mode rpc \
-      --no-session \
-      --provider anthropic \
-      --model claude-sonnet-4-5 \
-      --no-extensions \
-      -ns \
-      -np \
-      --no-themes \
-      --offline \
-      --tools read,bash,edit,write,grep,find,ls,ask_user \
-      --append-system-prompt /opt/pierre/PI_SYSTEM_APPEND.md \
-      -e /opt/pierre \
-)
-printf '%s\n' \"\$RPC_SMOKE\" | jq -s -e '
-  any(.[]; .type == \"response\" and .command == \"get_state\" and .success == true)
-  and any(.[]; .type == \"response\" and .command == \"get_session_stats\" and .success == true)
-  and any(.[]; .type == \"response\" and .command == \"get_commands\" and .success == true
-    and any(.data.commands[]; .name == \"skill:carl\" and .source == \"skill\"))
-  and all(.[]; .type != \"extension_error\")
-' >/dev/null
 "
 test "$(cat "$SMOKE_WORK/result.txt")" = workspace-marker
 
