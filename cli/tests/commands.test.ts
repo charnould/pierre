@@ -180,7 +180,7 @@ describe('atomic installation', () => {
         }
         if (name === 'smolvm' && args[0] === '--version') {
           return {
-            finished: Promise.resolve({ code: 0, stdout: 'smolvm 1.24.0\n', stderr: '' }),
+            finished: Promise.resolve({ code: 0, stdout: 'smolvm 1.36.1\n', stderr: '' }),
             kill: () => undefined
           }
         }
@@ -203,7 +203,7 @@ describe('atomic installation', () => {
         const name = command.split('/').pop()
         if (name === 'smolvm' && args[0] === '--version') {
           return {
-            finished: Promise.resolve({ code: 0, stdout: 'smolvm 1.24.0\n', stderr: '' }),
+            finished: Promise.resolve({ code: 0, stdout: 'smolvm 1.36.1\n', stderr: '' }),
             kill: () => undefined
           }
         }
@@ -374,7 +374,7 @@ describe('configuration', () => {
         const name = command.split('/').pop()
         if (name === 'smolvm') {
           return {
-            finished: Promise.resolve({ code: 0, stdout: 'smolvm 1.24.0\n', stderr: '' }),
+            finished: Promise.resolve({ code: 0, stdout: 'smolvm 1.36.1\n', stderr: '' }),
             kill: () => undefined
           }
         }
@@ -455,7 +455,7 @@ describe('configuration', () => {
         if (name === 'apt-get' && args[0] === 'install') present = true
         if (name === 'smolvm') {
           return {
-            finished: Promise.resolve({ code: 0, stdout: 'smolvm 1.24.0\n', stderr: '' }),
+            finished: Promise.resolve({ code: 0, stdout: 'smolvm 1.36.1\n', stderr: '' }),
             kill: () => undefined
           }
         }

@@ -1,13 +1,13 @@
 {
   "smolvm": {
-    "version": "1.24.0",
+    "version": "1.36.1",
     "darwin-arm64": {
-      "url": "https://github.com/smol-machines/smolvm/releases/download/v1.24.0/smolvm-1.24.0-darwin-arm64.tar.gz",
-      "sha256": "117f73e4af7481f3c185483323d12136a8d5e1acc5933885a9caa9567ae35f00"
+      "url": "https://github.com/smol-machines/smolvm/releases/download/v1.36.1/smolvm-1.36.1-darwin-arm64.tar.gz",
+      "sha256": "97cf08b0becc2f75bb84b23aabc29c27904b1d0c659815aafb24bd7d2f7ba186"
     },
     "linux-amd64": {
-      "url": "https://github.com/smol-machines/smolvm/releases/download/v1.24.0/smolvm-1.24.0-linux-x86_64.tar.gz",
-      "sha256": "df4cf6efcac4cff61238b98d30fe589e3ccfc5d57ade3c04401c808a54050b73"
+      "url": "https://github.com/smol-machines/smolvm/releases/download/v1.36.1/smolvm-1.36.1-linux-x86_64.tar.gz",
+      "sha256": "e024f313cb3546c5cb3a587235264e1fab7b2198b7c2b5a530f742d519c278a1"
     }
   },
   "node": {

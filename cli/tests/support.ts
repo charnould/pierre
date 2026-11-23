@@ -39,9 +39,9 @@ export const writeExe = async (path: string, body: string) => {
 export async function tempRoot(prefix: string) {
   const root = await mkdtemp(join(tmpdir(), prefix))
   await mkdir(join(root, 'home'), { recursive: true })
-  const smolvmRelease = join(root, 'smolvm-runtime', 'releases', '1.24.0')
+  const smolvmRelease = join(root, 'smolvm-runtime', 'releases', '1.36.1')
   await mkdir(smolvmRelease, { recursive: true })
-  await writeExe(join(smolvmRelease, 'smolvm'), '#!/bin/sh\necho "smolvm 1.24.0"\n')
+  await writeExe(join(smolvmRelease, 'smolvm'), '#!/bin/sh\necho "smolvm 1.36.1"\n')
   const smolvm = await Bun.file(join(smolvmRelease, 'smolvm')).arrayBuffer()
   const digest = new Bun.CryptoHasher('sha256').update(smolvm).digest('hex')
   await writeFile(join(smolvmRelease, 'checksums.txt'), `${digest}  smolvm\n`)
