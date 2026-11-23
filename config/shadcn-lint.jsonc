@@ -528,18 +528,6 @@
       }
     },
     {
-      "files": ["**/src/features/automations/components/AutomationFormScheduleFields.tsx"],
-      "rules": {
-        "shadcn/no-restyle": [
-          "error",
-          {
-            "allow": ["layout"],
-            "contracts": [{ "pattern": "^SelectValue$", "allow": ["layout", "tabular-nums"] }]
-          }
-        ]
-      }
-    },
-    {
       "files": ["**/src/shared/components/ChoiceTile.tsx"],
       "rules": {
         "shadcn/no-restyle": [
