@@ -11,6 +11,14 @@ import { type ComponentProps, Fragment, type ReactNode } from 'react'
 
 import { Checkbox } from '@/shared/components/ui/checkbox'
 import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList
+} from '@/shared/components/ui/combobox'
+import {
   Field,
   FieldContent,
   FieldDescription,
@@ -22,13 +30,6 @@ import {
 } from '@/shared/components/ui/field'
 import { Input } from '@/shared/components/ui/input'
 import { RadioGroup, RadioGroupItem } from '@/shared/components/ui/radio-group'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/shared/components/ui/select'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { formatAttachmentBytes } from '@/shared/lib/attachment-files'
 
@@ -198,7 +199,7 @@ function renderControl({
   }
 
   if (field.type === 'single_choice') {
-    const cleanOptions = field.options.map((option) => option.trim()).filter(Boolean)
+    const cleanOptions = [...new Set(field.options.map((option) => option.trim()).filter(Boolean))]
     if (field.display === 'radio') {
       return (
         <RadioGroup name={name} disabled={disabled} required={required} onValueChange={onClear}>
@@ -217,18 +218,33 @@ function renderControl({
       )
     }
     return (
-      <Select name={name} disabled={disabled} required={required} onValueChange={onClear}>
-        <SelectTrigger id={fieldId} className="w-full" aria-invalid={ariaInvalid}>
-          <SelectValue placeholder="Sélectionner…" />
-        </SelectTrigger>
-        <SelectContent>
-          {cleanOptions.map((option, optIdx) => (
-            <SelectItem key={`${option}-${optIdx}`} value={option}>
-              {option}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Combobox
+        items={cleanOptions}
+        autoHighlight
+        name={name}
+        disabled={disabled}
+        required={required}
+        onValueChange={onClear}
+      >
+        <ComboboxInput
+          id={fieldId}
+          className="w-full"
+          placeholder="Rechercher ou sélectionner…"
+          showClear
+          disabled={disabled}
+          aria-invalid={ariaInvalid}
+        />
+        <ComboboxContent>
+          <ComboboxEmpty>Aucun résultat.</ComboboxEmpty>
+          <ComboboxList>
+            {(option) => (
+              <ComboboxItem key={option} value={option}>
+                {option}
+              </ComboboxItem>
+            )}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
     )
   }
 

@@ -152,4 +152,220 @@ describe('IntakeWebApp', () => {
     })
     host.remove()
   })
+
+  test('uses an auto-highlight combobox for single_choice selects and rejects unmatched free text', async () => {
+    const { act } = await import('react')
+    const { createRoot } = await import('react-dom/client')
+    const { IntakeWebApp } = await import('./IntakeWebApp')
+
+    const selectBoot: IntakePublicBoot = {
+      ...boot,
+      hasPasswords: false,
+      form: {
+        title: 'Signalement résidence',
+        fields: [
+          {
+            type: 'single_choice',
+            label: 'Résidence',
+            required: true,
+            display: 'select',
+            options: ['Résidence Les Tilleuls', 'Étage 2 — Bâtiment B', 'Immeuble Pasteur']
+          },
+          {
+            type: 'single_choice',
+            label: 'Urgence',
+            display: 'radio',
+            options: ['Normale', 'Haute']
+          }
+        ]
+      }
+    }
+
+    const flush = async () => {
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0))
+      })
+    }
+
+    const setInputValue = async (input: HTMLInputElement, value: string) => {
+      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set
+      await act(async () => {
+        setter?.call(input, value)
+        input.dispatchEvent(
+          new InputEvent('input', { bubbles: true, inputType: 'insertText', data: value })
+        )
+      })
+      await flush()
+    }
+
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const root = createRoot(host)
+
+    await act(async () => {
+      root.render(<IntakeWebApp boot={selectBoot} />)
+    })
+    await flush()
+
+    const form = host.querySelector('form')
+    expect(form).not.toBeNull()
+
+    // Radio display stays a RadioGroup
+    expect(host.querySelector('[data-slot="radio-group"]')).not.toBeNull()
+    expect(host.querySelector('[data-slot="select-trigger"]')).toBeNull()
+
+    const label = [...host.querySelectorAll('label')].find((el) =>
+      el.textContent?.includes('Résidence')
+    )
+    const input = host.querySelector<HTMLInputElement>(`#${label?.getAttribute('for')}`)
+    expect(input).not.toBeNull()
+    expect(input?.getAttribute('role')).toBe('combobox')
+
+    // Typing an accent-free query filters options and auto-highlights the first match
+    await act(async () => {
+      input?.focus()
+    })
+    await setInputValue(input!, 'etage')
+
+    const items = [...document.querySelectorAll<HTMLElement>('[data-slot="combobox-item"]')]
+    expect(items.map((item) => item.textContent)).toEqual(['Étage 2 — Bâtiment B'])
+    expect(items[0]?.hasAttribute('data-highlighted')).toBe(true)
+
+    // Pressing Enter selects the auto-highlighted option and populates FormData
+    await act(async () => {
+      input?.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })
+      )
+    })
+    await flush()
+
+    expect(input?.value).toBe('Étage 2 — Bâtiment B')
+    expect(new window.FormData(form!).get('residence')).toBe('Étage 2 — Bâtiment B')
+
+    // Clearing via showClear empties the selection
+    const clearButton = host.querySelector<HTMLButtonElement>('[data-slot="combobox-clear"]')
+    expect(clearButton).not.toBeNull()
+    await act(async () => {
+      clearButton?.click()
+    })
+    await flush()
+
+    expect(input?.value).toBe('')
+    expect(new window.FormData(form!).get('residence')).toBe('')
+
+    // Typing unmatched text shows the empty state and never leaks invalid text into FormData
+    await setInputValue(input!, 'Saisie libre inexistante')
+    const empty = document.querySelector<HTMLElement>('[data-slot="combobox-empty"]')
+    expect(empty?.textContent).toContain('Aucun résultat.')
+    expect(new window.FormData(form!).get('residence')).toBe('')
+
+    // Closing without a valid match resets the visible input back to empty
+    await act(async () => {
+      input?.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+      )
+    })
+    await flush()
+    expect(input?.value).toBe('')
+    expect(new window.FormData(form!).get('residence')).toBe('')
+
+    await act(async () => {
+      root.unmount()
+    })
+    host.remove()
+  })
+
+  test('marks combobox invalid on 422 validation error and clears it on selection', async () => {
+    const { act } = await import('react')
+    const { createRoot } = await import('react-dom/client')
+    const { IntakeWebApp } = await import('./IntakeWebApp')
+
+    const selectBoot: IntakePublicBoot = {
+      ...boot,
+      hasPasswords: false,
+      form: {
+        title: 'Signalement résidence',
+        fields: [
+          {
+            type: 'single_choice',
+            label: 'Résidence',
+            required: true,
+            options: ['Résidence A', 'Résidence B']
+          }
+        ]
+      }
+    }
+
+    const originalFetch = globalThis.fetch
+    const originalCss = globalThis.CSS
+    const originalScrollIntoView = Element.prototype.scrollIntoView
+    globalThis.CSS = { escape: (value: string) => value } as typeof CSS
+    Element.prototype.scrollIntoView = () => {}
+    globalThis.fetch = (async () =>
+      new Response(
+        JSON.stringify({
+          error: {
+            code: 'validation_error',
+            message: 'Veuillez corriger les champs en erreur.',
+            fields: { residence: 'Ce champ est obligatoire.' }
+          }
+        }),
+        { status: 422, headers: { 'content-type': 'application/json' } }
+      )) as unknown as typeof fetch
+
+    const flush = async () => {
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0))
+      })
+    }
+
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const root = createRoot(host)
+
+    try {
+      await act(async () => {
+        root.render(<IntakeWebApp boot={selectBoot} />)
+      })
+      await flush()
+
+      const form = host.querySelector('form')
+      await act(async () => {
+        form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+      })
+      await flush()
+
+      const input = host.querySelector<HTMLInputElement>('input[role="combobox"]')
+      expect(input?.getAttribute('aria-invalid')).toBe('true')
+      expect(host.textContent).toContain('Ce champ est obligatoire.')
+
+      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set
+      await act(async () => {
+        input?.focus()
+        setter?.call(input, 'Résidence B')
+        input?.dispatchEvent(
+          new InputEvent('input', { bubbles: true, inputType: 'insertText', data: 'Résidence B' })
+        )
+      })
+      await flush()
+
+      const item = document.querySelector<HTMLElement>('[data-slot="combobox-item"]')
+      expect(item?.textContent).toBe('Résidence B')
+      await act(async () => {
+        item?.click()
+      })
+      await flush()
+
+      expect(input?.getAttribute('aria-invalid')).toBeNull()
+      expect(host.textContent).not.toContain('Ce champ est obligatoire.')
+    } finally {
+      globalThis.fetch = originalFetch
+      globalThis.CSS = originalCss
+      Element.prototype.scrollIntoView = originalScrollIntoView
+      await act(async () => {
+        root.unmount()
+      })
+      host.remove()
+    }
+  })
 })
